@@ -19,7 +19,7 @@ type CycleEntry = { id: string; start: string; end: string; energy: number; note
 type Profile = { name: string; goal: string; cycle: boolean; theme: "light" | "dark"; onboarded: boolean; wearable: string };
 type State = { profile: Profile; workouts: Workout[]; foods: Food[]; supplements: Supplement[]; cycle: CycleEntry[] };
 
-const key = "vyra-local-prototype-v2";
+const key = "vyra-local-prototype-v3";
 const today = new Date();
 const todayIso = format(today, "yyyy-MM-dd");
 const week = [
