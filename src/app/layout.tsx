@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./clean.css";
 
 export const metadata: Metadata = {
   title: "VYRA - High Performance for Everybody",
