@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import "./clean.css";
 
 export const metadata: Metadata = {
   title: "VYRA - High Performance for Everybody",
-  description: "A local-first health intelligence prototype for activity, nutrition, recovery, cycle tracking, and AI-style insights.",
+  description:
+    "Dein Alltag im Blick: Health, Ernährung, Supplements und persönliche Gesundheitsdaten.",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "VYRA" },
 };
 
@@ -13,11 +13,17 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAFAFA" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A0A0A" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f8f6" },
+    { media: "(prefers-color-scheme: dark)", color: "#f6f8f6" },
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" suppressHydrationWarning><body>{children}</body></html>;
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="de">
+      <body>{children}</body>
+    </html>
+  );
 }

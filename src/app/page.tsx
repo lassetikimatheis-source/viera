@@ -1,137 +1,285 @@
 "use client";
-
-import { motion } from "framer-motion";
-import { Activity, Apple, ArrowLeft, BarChart3, Bell, ChevronDown, ChevronRight, Dumbbell, Flame, HeartPulse, Home, MessageCircle, Moon, Salad, Settings, ShieldCheck, Sparkles, User, Users, Watch } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-
-type Tab = "home" | "fitness" | "nutrition" | "coach" | "profile";
-type Detail = "fitness" | "heart" | "steps" | "sleep" | "run" | "strength" | "meal" | "athlete" | "integrations" | "sharing" | "settings";
-type Tone = "indigo" | "green" | "rose" | "violet" | "orange" | "blue";
-
-const week = [["Mo", 38], ["Di", 74], ["Mi", 52], ["Do", 94], ["Fr", 62], ["Sa", 88], ["So", 43]] as const;
-const health = [
-  ["Ruhepuls", "58", "bpm", HeartPulse, "heart", "rose"],
-  ["Schritte", "7.842", "", Activity, "steps", "green"],
-  ["Schlaf", "7 Std 42", "Min", Moon, "sleep", "violet"],
-  ["Fitnesslevel", "82", "/100", Dumbbell, "fitness", "blue"],
+import {
+  Activity,
+  ArrowUpRight,
+  Droplets,
+  Heart,
+  House,
+  Plus,
+  ScanLine,
+  Settings2,
+  ShieldCheck,
+  UserRound,
+  Utensils,
+  Users,
+  Moon,
+} from "lucide-react";
+import { useEffect, useRef } from "react";
+import {
+  displayDate,
+  metricValue,
+  number,
+  totals,
+} from "@/lib/vyra-data";
+import { Provider, useVyra } from "@/components/vyra/store";
+import {
+  IconButton,
+  Meter,
+  Row,
+  SectionTitle,
+  Title,
+} from "@/components/vyra/ui";
+import {
+  HealthScreen,
+  HealthDetail,
+  Connections,
+} from "@/components/vyra/health";
+import { NutritionScreen } from "@/components/vyra/nutrition";
+import { WellbeingScreen } from "@/components/vyra/wellbeing";
+import { ProfileScreen } from "@/components/vyra/profile";
+const tabs = [
+  { id: "home", label: "Home", icon: House },
+  { id: "health", label: "Health", icon: Activity },
+  { id: "nutrition", label: "Ernährung", icon: Utensils },
+  { id: "wellbeing", label: "Gesundheit", icon: Heart },
+  { id: "profile", label: "Profil", icon: UserRound },
 ] as const;
-const workouts = [
-  ["Laufen", "5,2 km · 32 Min", "410 kcal", Activity, "run"],
-  ["Krafttraining", "Oberkörper · 45 Min", "320 kcal", Dumbbell, "strength"],
-  ["Recovery", "Schlaf & Bereitschaft", "92%", Moon, "sleep"],
-] as const;
-const meals = [
-  ["Frühstück", "Haferflocken mit Beeren", "420 kcal", Sparkles],
-  ["Mittagessen", "Hähnchen mit Quinoa", "560 kcal", Salad],
-  ["Abendessen", "Lachs mit Gemüse", "480 kcal", Moon],
-  ["Snacks", "Joghurt mit Nüssen", "160 kcal", Apple],
-] as const;
-const athletes = [
-  ["Lea Wagner", "Laufen", 85, "7 Std 48", "3/3", "5.820"],
-  ["Jonas Becker", "Krafttraining", 78, "6 Std 55", "2/3", "4.210"],
-  ["Sophie Keller", "Radsport", 76, "6 Std 12", "1/3", "3.980"],
-  ["Max Huber", "Triathlon", 82, "7 Std 20", "3/3", "6.140"],
-] as const;
-const nav = [["home", "Home", Home], ["fitness", "Fitness", BarChart3], ["nutrition", "Ernährung", Salad], ["coach", "Coach", MessageCircle], ["profile", "Profil", User]] as const;
-
-export default function App() {
-  const [tab, setTab] = useState<Tab>("home");
-  const [detail, setDetail] = useState<Detail | null>(null);
-  useEffect(() => { document.querySelector("main.min-h-dvh > div:first-child")?.scrollTo({ top: 0, behavior: "instant" }); }, [tab, detail]);
-  const openTab = (next: Tab) => { setDetail(null); setTab(next); };
+export default function Page() {
   return (
-    <main className="min-h-dvh bg-[#fff8f4] text-slate-950">
-      <div className="mx-auto max-w-[430px] px-5 pb-28 pt-7">
-        <TopBar onProfile={() => openTab("profile")} />
-        <motion.div key={detail || tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-          {detail ? <DetailScreen detail={detail} back={() => setDetail(null)} setDetail={setDetail} setTab={openTab} /> : (
-            <>
-              {tab === "home" && <HomeScreen setDetail={setDetail} setTab={openTab} />}
-              {tab === "fitness" && <FitnessScreen setDetail={setDetail} />}
-              {tab === "nutrition" && <NutritionScreen setDetail={setDetail} />}
-              {tab === "coach" && <CoachScreen setDetail={setDetail} />}
-              {tab === "profile" && <ProfileScreen setDetail={setDetail} />}
-            </>
-          )}
-        </motion.div>
-      </div>
-      <BottomNav tab={tab} detail={detail} openTab={openTab} />
-    </main>
+    <Provider>
+      <App />
+    </Provider>
   );
 }
-
-function TopBar({ onProfile }: { onProfile: () => void }) {
-  return <header className="mb-5 flex items-center justify-between"><div className="text-[34px] font-black tracking-[0.18em]">VYRA</div><div className="flex items-center gap-3"><button className="relative grid size-10 place-items-center rounded-full bg-white/55 shadow-sm backdrop-blur"><Bell className="size-5" /><span className="absolute right-2 top-2 size-2.5 rounded-full bg-rose-400" /></button><button onClick={onProfile} className="grid size-11 place-items-center rounded-full bg-white shadow-sm"><User className="size-5" /></button></div></header>;
+function App() {
+  const { route, go, data } = useVyra();
+  const scroll = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scroll.current?.scrollTo(0, 0);
+  }, [route]);
+  return (
+    <div className="stage">
+      <aside className="desktop-brand">
+        <img src="/icon.svg" width="36" height="36" alt="" />
+        <b>VYRA</b>
+        <span>
+          High Performance
+          <br />
+          for Everybody.
+        </span>
+      </aside>
+      <main className="phone">
+        <div className="device-top" aria-hidden="true">
+          <span>9:41</span>
+          <i />
+          <span>••• ▰</span>
+        </div>
+        <header className="app-header">
+          <button
+            className="brand"
+            aria-label="VYRA Home"
+            onClick={() => go("home")}
+          >
+            <img src="/icon.svg" width="30" height="30" alt="" />
+            VYRA
+          </button>
+          <div className="header-actions">
+            {data.demo && <span className="demo-badge">Demo</span>}
+            <IconButton
+              icon={Users}
+              label="Freunde"
+              onClick={() => go("profile", "friends")}
+            />
+            <button
+              className="avatar-button"
+              onClick={() => go("profile")}
+              aria-label="Mein Profil"
+            >
+              {data.profile.avatar ? (
+                <img src={data.profile.avatar} alt="Profilbild" />
+              ) : (
+                data.profile.name.slice(0, 1).toUpperCase()
+              )}
+            </button>
+          </div>
+        </header>
+        <div ref={scroll} className="app-scroll">
+          <div className="screen" key={`${route.tab}/${route.detail || ""}`}>
+            {route.detail === "connections" ? (
+              <Connections />
+            ) : route.tab === "home" ? (
+              <Dashboard />
+            ) : route.tab === "health" ? (
+              route.detail ? (
+                <HealthDetail />
+              ) : (
+                <HealthScreen />
+              )
+            ) : route.tab === "nutrition" ? (
+              <NutritionScreen />
+            ) : route.tab === "wellbeing" ? (
+              <WellbeingScreen />
+            ) : (
+              <ProfileScreen />
+            )}
+          </div>
+        </div>
+        <nav className="bottom-nav" aria-label="Hauptnavigation">
+          {tabs.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => go(id)}
+              aria-current={route.tab === id ? "page" : undefined}
+            >
+              <Icon size={23} strokeWidth={route.tab === id ? 2.4 : 1.65} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="home-indicator" aria-hidden="true" />
+      </main>
+    </div>
+  );
 }
-
-function BottomNav({ tab, detail, openTab }: { tab: Tab; detail: Detail | null; openTab: (t: Tab) => void }) {
-  return <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-white/70 bg-white/65 px-3 pt-2 shadow-[0_-18px_48px_rgba(15,23,42,0.08)] backdrop-blur-2xl"><div className="mx-auto grid max-w-[430px] grid-cols-5 gap-1">{nav.map(([value, label, Icon]) => <button key={value} onClick={() => openTab(value)} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold text-slate-400", !detail && tab === value && "bg-white text-indigo-600 shadow-[0_10px_26px_rgba(79,70,229,0.12)]")}><Icon className="size-5" />{label}</button>)}</div></nav>;
+function Dashboard() {
+  const { data, day, go, setData } = useVyra();
+  const sum = totals(data.entries.filter((e) => e.date === day));
+  const steps = metricValue(data.samples, "steps", day),
+    sleep = metricValue(data.samples, "sleep", day),
+    water = data.water[day] || 0;
+  const hour = new Date().getHours();
+  return (
+    <>
+      <Title
+        eyebrow={displayDate(day)}
+        title={`${hour < 11 ? "Guten Morgen" : hour < 18 ? "Hallo" : "Guten Abend"}, ${data.profile.name.split(" ")[0]}.`}
+      />
+      <div className="today-summary">
+        <div className="summary-label">
+          <span>Dein Tag im Überblick</span>
+          <span className="status-dot">
+            {data.demo ? "Beispieldaten" : "Deine Einträge"}
+          </span>
+        </div>
+        <div className="energy-main">
+          <div>
+            <span className="label">Noch offen</span>
+            <div className="hero-number">
+              {number(Math.max(0, data.goals.kcal - sum.kcal))}
+              <small>kcal</small>
+            </div>
+          </div>
+          <button
+            className="round-action"
+            aria-label="Mahlzeit hinzufügen"
+            title="Mahlzeit hinzufügen"
+            onClick={() => go("nutrition", "add")}
+          >
+            <Plus size={26} />
+          </button>
+        </div>
+        <Meter value={sum.kcal} max={data.goals.kcal} />
+        <div className="summary-foot">
+          <span>{number(sum.kcal)} gegessen</span>
+          <span>{number(data.goals.kcal)} Tagesziel</span>
+        </div>
+        <button className="protein-line" onClick={() => go("nutrition")}>
+          <span>
+            <i className="color-dot lavender" />
+            Eiweiß
+          </span>
+          <strong>
+            {number(sum.protein)} <small>/ {data.goals.protein} g</small>
+          </strong>
+          <ArrowUpRight size={17} />
+        </button>
+      </div>
+      <div className="metric-pair">
+        <button onClick={() => go("health", "steps")} className="metric-block">
+          <span className="label">
+            <Activity size={17} className="mint-text" />
+            Bewegung
+          </span>
+          <strong>{steps === null ? "—" : number(steps)}</strong>
+          <small>von {number(data.goals.steps)} Schritten</small>
+          <Meter value={steps || 0} max={data.goals.steps} />
+        </button>
+        <button onClick={() => go("health", "sleep")} className="metric-block">
+          <span className="label">
+            <Moon size={17} className="lavender-text" />
+            Erholung
+          </span>
+          <strong>
+            {sleep === null
+              ? "—"
+              : `${Math.floor(sleep)}h ${Math.round((sleep % 1) * 60)}m`}
+          </strong>
+          <small>
+            {sleep === null
+              ? "Noch keine Schlafdaten"
+              : "Schlafdauer letzte Nacht"}
+          </small>
+          <Meter value={sleep || 0} max={8} tone="lavender" />
+        </button>
+      </div>
+      <SectionTitle>Direkt erfassen</SectionTitle>
+      <div className="quick-actions">
+        <button onClick={() => go("nutrition", "scan")}>
+          <ScanLine />
+          <span>Scannen</span>
+        </button>
+        <button onClick={() => go("nutrition", "photo")}>
+          <Utensils />
+          <span>Foto-Log</span>
+        </button>
+        <button
+          onClick={() =>
+            setData((s) => ({
+              ...s,
+              water: { ...s.water, [day]: (s.water[day] || 0) + 250 },
+            }))
+          }
+        >
+          <Droplets />
+          <span>+250 ml</span>
+        </button>
+      </div>
+      <div className="water-line">
+        <Droplets size={17} />
+        <span>Wasser</span>
+        <strong>
+          {number(water / 1000, 2)} / {number(data.goals.water / 1000, 1)} l
+        </strong>
+      </div>
+      <SectionTitle action="Alle Werte" onClick={() => go("health")}>
+        Für deinen Überblick
+      </SectionTitle>
+      <div className="rows">
+        <Row
+          icon={Heart}
+          tone="rose"
+          title="Health verbinden"
+          text={
+            data.samples.some((s) => s.source !== "Beispieldaten")
+              ? "Datenquellen und Import verwalten"
+              : "Schlaf, Aktivität und Körperwerte"
+          }
+          onClick={() => go("health", "connections")}
+        />
+        <Row
+          icon={ShieldCheck}
+          tone="lavender"
+          title="Dein Wochenbericht"
+          text="Ernährung und Bewegung im Verlauf"
+          onClick={() => go("wellbeing", "report")}
+        />
+        <Row
+          icon={Settings2}
+          title="Deine Ziele"
+          text={data.profile.goal}
+          onClick={() => go("profile", "goals")}
+        />
+      </div>
+    </>
+  );
 }
-
-function HomeScreen({ setDetail, setTab }: { setDetail: (d: Detail) => void; setTab: (t: Tab) => void }) {
-  return <><Title title="Guten Morgen" text="Schön, dass du da bist. Bereit für einen gesunden Tag?" /><button onClick={() => setDetail("fitness")} className="w-full text-left"><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="flex items-center justify-between gap-4"><div><h2 className="text-xl font-black">Fitnesslevel <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500">i</span></h2><div className="mt-3 flex items-end gap-2"><span className="text-6xl font-black">82</span><span className="pb-2 text-2xl font-semibold text-slate-400">/100</span></div><Badge>+6 seit letzter Woche</Badge></div><Ring value={82} label="Bereitschaft" /></div><div className="mt-5 border-t border-slate-200/70 pt-4"><p className="mb-3 text-sm font-bold">So setzt sich dein Fitnesslevel zusammen</p><div className="grid grid-cols-3 gap-2"><ScorePart icon={<Moon />} label="Schlaf" value={80} tone="violet" /><ScorePart icon={<Salad />} label="Essen" value={78} tone="rose" /><ScorePart icon={<Dumbbell />} label="Training" value={88} tone="green" /></div></div></Card></button><SectionTitle title="Deine Gesundheitsdaten" action="Alle anzeigen" onClick={() => setTab("fitness")} /><div className="grid grid-cols-2 gap-3">{health.map(([label, value, unit, Icon, detail, tone]) => <Metric key={label} icon={<Icon />} label={label} value={value} unit={unit} tone={tone as Tone} onClick={() => setDetail(detail)} />)}</div><button onClick={() => { setTab("fitness"); setDetail("run"); }} className="w-full text-left"><Callout icon={<Activity />} kicker="Heute für dich" title="Leichte Aktivität" text="Ideale Bedingungen für eine Bewegungseinheit." /></button></>;
-}
-
-function FitnessScreen({ setDetail }: { setDetail: (d: Detail) => void }) {
-  return <><Title title="Aktivität & Trainingswoche" text="Deine Bewegung. Dein Fortschritt. Für ein gesünderes Ich." /><DateStrip /><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="mb-4 flex items-start justify-between"><div><h2 className="text-xl font-black">Diese Woche</h2><div className="mt-5 flex gap-6"><Big value="7" label="Workouts" /><Big value="5,2" label="Std Aktivitätszeit" /></div></div><button onClick={() => setDetail("fitness")}><Ring value={82} label="Fitnesslevel" small /></button></div><Bars /></Card><div className="grid grid-cols-3 gap-3"><Small icon={<Activity />} label="Schritte" value="7.842" tone="green" onClick={() => setDetail("steps")} /><Small icon={<Flame />} label="Kalorien" value="482" tone="orange" onClick={() => setDetail("run")} /><Small icon={<Sparkles />} label="Aktivzeit" value="48 Min" tone="violet" onClick={() => setDetail("strength")} /></div><SectionTitle title="Deine Workouts" action="Alle anzeigen" onClick={() => setDetail("run")} />{workouts.map(([title, meta, value, Icon, detail]) => <ListItem key={title} icon={<Icon />} title={title} text={meta} value={value} onClick={() => setDetail(detail)} />)}<button onClick={() => setDetail("fitness")} className="w-full text-left"><Callout icon={<Sparkles />} kicker="Dein Wochenfokus" title="Starke Woche!" text="Deine Aktivität ist 18 % höher als letzte Woche." /></button></>;
-}
-
-function NutritionScreen({ setDetail }: { setDetail: (d: Detail) => void }) {
-  return <><Title title="Ernährung & Kalorien" text="Gute Ernährung gibt dir Energie. Einfach. Ausgewogen. Für dich." /><DateStrip pink /><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="flex items-center justify-between gap-4"><div><h2 className="text-xl font-black">Kalorien heute</h2><div className="mt-3 flex items-end gap-2"><span className="text-6xl font-black">1.620</span><span className="pb-2 text-xl font-semibold text-slate-400">/ 2.200 kcal</span></div><Progress value={74} tone="rose" /></div><Ring value={74} label="Ziel" color="rose" /></div><div className="mt-5 grid grid-cols-4 gap-2">{[["Protein","102 g","violet"],["Carbs","176 g","rose"],["Fett","58 g","orange"],["Ballast","24 g","green"]].map(([a,b,c]) => <Macro key={a} label={a} value={b} tone={c as Tone} />)}</div></Card><SectionTitle title="Deine Mahlzeiten" action="Alle anzeigen" onClick={() => setDetail("meal")} /><div className="grid grid-cols-2 gap-3">{meals.map(([title, meta, value, Icon]) => <Meal key={title} icon={<Icon />} title={title} text={meta} value={value} onClick={() => setDetail("meal")} />)}</div><div className="grid grid-cols-2 gap-3"><MiniWide icon={<Activity />} title="Wasser" value="1,8 l / 2,5 l" tone="blue" /><MiniWide icon={<ShieldCheck />} title="Supplements" value="3 / 4 heute" tone="green" /></div><button onClick={() => setDetail("meal")} className="w-full text-left"><Callout pink icon={<Sparkles />} kicker="VYRA KI-Empfehlung" title="Starke Wahl heute!" text="Gute Balance aus Protein, Kohlenhydraten und Fett." /></button></>;
-}
-
-function CoachScreen({ setDetail }: { setDetail: (d: Detail) => void }) {
-  return <><div className="flex items-start justify-between gap-3"><Title title="Coach Übersicht" text="Behalte die Entwicklung deiner Athlet:innen im Blick." /><button className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-white/70 bg-white/60 px-4 py-3 text-sm font-semibold shadow-sm">Mein Team <ChevronDown className="size-4" /></button></div><div className="grid grid-cols-4 gap-2"><CoachStat icon={<Users />} value="5" label="Athlet:innen" /><CoachStat icon={<BarChart3 />} value="4/5" label="Im Plan" /><CoachStat icon={<Bell />} value="1" label="Achtung" /><CoachStat icon={<Activity />} value="+12%" label="Ø Fitness" /></div><SectionTitle title="Deine Athlet:innen" action="Nach Fitnesslevel" />{athletes.map(([name, sport, score, sleep, training, kcal]) => <button key={name} onClick={() => setDetail("athlete")} className="w-full text-left"><Card className="border-white/70 bg-white/64 p-4 backdrop-blur-xl"><div className="flex items-center gap-3"><Avatar name={name} /><div className="min-w-0 flex-1"><h3 className="font-black">{name}</h3><p className="text-sm text-slate-500">{sport}</p></div><Ring value={score} label="" small /><ChevronRight className="size-5 text-slate-400" /></div><div className="mt-3 grid grid-cols-3 gap-2"><Tiny label="Schlaf" value={sleep} /><Tiny label="Training" value={training} /><Tiny label="Kalorien" value={kcal} /></div></Card></button>)}</>;
-}
-
-function ProfileScreen({ setDetail }: { setDetail: (d: Detail) => void }) {
-  return <><Title title="Integrationen & Datenfreigabe" text="Verbinde deine Geräte und Apps. Du behältst die volle Kontrolle über deine Daten." /><SectionTitle title="Meine Verbindungen" action="Alle anzeigen" onClick={() => setDetail("integrations")} /><Connection icon={<Watch />} title="Apple Watch" text="Aktivität, Herzfrequenz, Schlaf" onClick={() => setDetail("integrations")} /><Connection icon={<Activity />} title="Garmin" text="Workouts, Herzfrequenz, Schritte" onClick={() => setDetail("integrations")} /><Connection icon={<HeartPulse />} title="Apple Health" text="Gesundheitsdaten zentral synchronisieren" onClick={() => setDetail("integrations")} /><Connection icon={<Salad />} title="Ernährung" text="Mahlzeiten, Kalorien, Nährstoffe" onClick={() => setDetail("integrations")} /><SectionTitle title="Datenfreigabe" action="Alle verwalten" onClick={() => setDetail("sharing")} /><Card className="border-white/70 bg-white/64 p-4 backdrop-blur-xl">{["Schlafdaten","Aktivitätsdaten","Herzfrequenz","Ernährungsdaten"].map((label) => <button key={label} onClick={() => setDetail("sharing")} className="flex w-full items-center justify-between border-b border-slate-200/70 py-3 last:border-0"><span className="text-left"><b>{label}</b><br /><small className="text-slate-500">Für personalisierte Empfehlungen</small></span><Toggle on /></button>)}</Card><button onClick={() => setDetail("settings")} className="w-full text-left"><Callout icon={<Users />} kicker="Optional" title="Mit Coach teilen" text="Teile ausgewählte Daten, um bessere Betreuung zu erhalten." /></button></>;
-}
-
-function DetailScreen({ detail, back, setDetail, setTab }: { detail: Detail; back: () => void; setDetail: (d: Detail) => void; setTab: (t: Tab) => void }) {
-  const title = { fitness: "Fitnesslevel Details", heart: "Herzfrequenz", steps: "Schritte", sleep: "Schlaf & Recovery", run: "Lauftraining", strength: "Krafttraining", meal: "Mahlzeit Details", athlete: "Athlet Details", integrations: "Integrationen", sharing: "Datenfreigabe", settings: "Einstellungen" }[detail];
-  return <><div className="flex items-center justify-between"><button onClick={back} className="grid size-10 place-items-center rounded-full bg-white/60 shadow-sm"><ArrowLeft className="size-5" /></button><h1 className="text-lg font-black">{title}</h1><button onClick={() => setDetail("settings")} className="grid size-10 place-items-center rounded-full bg-white/60 shadow-sm"><Settings className="size-5" /></button></div>{detail === "fitness" && <FitnessDetail setDetail={setDetail} />}{detail === "heart" && <MetricDetail icon={<HeartPulse />} title="Herzfrequenz" value="58 bpm" text="Dein Ruhepuls ist stabil und die Erholung wirkt ruhig." tone="rose" />}{detail === "steps" && <MetricDetail icon={<Activity />} title="Schritte" value="8.560" text="86 % vom Tagesziel. Ein kurzer Spaziergang bringt dich nah an 10.000." tone="green" />}{detail === "sleep" && <SleepDetail />}{(detail === "run" || detail === "strength") && <WorkoutDetail strength={detail === "strength"} />}{detail === "meal" && <MealDetail />}{detail === "athlete" && <AthleteDetail setDetail={setDetail} />}{detail === "integrations" && <IntegrationsDetail setDetail={setDetail} />}{detail === "sharing" && <SharingDetail />}{detail === "settings" && <SettingsDetail setTab={setTab} />}</>;
-}
-
-function FitnessDetail({ setDetail }: { setDetail: (d: Detail) => void }) {
-  return <><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="flex items-center justify-between gap-4"><div><h2 className="text-4xl font-black leading-tight">Dein Fitnesslevel</h2><p className="mt-3 text-lg leading-7 text-slate-500">Ein ganzheitlicher Score für Alltag, Training und Recovery.</p></div><Ring value={82} label="Bereitschaft" /></div></Card><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><h2 className="text-xl font-black">So entsteht dein Fitnesslevel</h2><div className="mt-4 grid grid-cols-3 gap-2"><DetailPart icon={<Moon />} label="Schlaf" value="80" weight="40%" tone="violet" onClick={() => setDetail("sleep")} /><DetailPart icon={<Salad />} label="Essen" value="78" weight="30%" tone="rose" onClick={() => setDetail("meal")} /><DetailPart icon={<Dumbbell />} label="Training" value="88" weight="30%" tone="green" onClick={() => setDetail("strength")} /></div></Card><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><h2 className="text-xl font-black">Diese Woche beeinflusst</h2><Impact good title="Score erhöht" rows={["3 von 4 geplanten Workouts", "Bessere Schlafqualität", "Konstantere Ernährung"]} /><Impact title="Score gesenkt" rows={["1 Tag mit wenig Bewegung", "Mehr Zucker als sonst"]} /></Card></>;
-}
-
-function MetricDetail({ icon, title, value, text, tone }: { icon: React.ReactNode; title: string; value: string; text: string; tone: Tone }) { return <><Title title={title} text={text} /><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="flex items-center gap-4"><span className={cn("grid size-16 place-items-center rounded-3xl", toneBg(tone), toneText(tone))}>{icon}</span><div><p className="text-sm font-bold text-slate-500">Aktueller Wert</p><div className="text-5xl font-black">{value}</div></div></div><Bars tone={tone} /></Card></>; }
-function SleepDetail() { return <><Title title="Schlaf & Recovery" text="Besser schlafen. Stärker leben. Deine Erholung für mehr Energie." /><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-black">Schlafdauer</h2><div className="mt-3 text-5xl font-black">7 Std 42 Min</div><Badge>+1 Std 12 Min vs. letzte Woche</Badge></div><Ring value={92} label="Qualität" /></div><div className="mt-6 flex h-8 overflow-hidden rounded-xl"><span className="w-[18%] bg-indigo-500" /><span className="w-[42%] bg-violet-300" /><span className="w-[24%] bg-indigo-300" /><span className="w-[16%] bg-slate-200" /></div><div className="mt-3 grid grid-cols-4 gap-2 text-xs text-slate-500"><span>Tief 1:48</span><span>Leicht 4:12</span><span>REM 1:22</span><span>Wach 20m</span></div></Card><Callout icon={<Moon />} kicker="Heute für dich" title="Sehr gute Erholung" text="Ideale Voraussetzungen für einen produktiven Tag." /></>; }
-function WorkoutDetail({ strength }: { strength: boolean }) { return <><Title title={strength ? "Kraft - Oberkörper" : "Lauf - Intervall"} text={strength ? "45 Minuten · 320 kcal · moderate Intensität" : "5,2 km · 32 Minuten · hohe Intensität"} /><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="grid grid-cols-3 gap-3"><Big value={strength ? "45" : "5,2"} label={strength ? "Minuten" : "km"} /><Big value={strength ? "320" : "32"} label={strength ? "kcal" : "Min"} /><Big value={strength ? "7/10" : "8/10"} label="Intensität" /></div><Bars tone={strength ? "green" : "rose"} /></Card><Callout icon={<Sparkles />} kicker="Empfehlung" title={strength ? "Protein & Schlaf priorisieren" : "Morgen locker bleiben"} text="Der nächste Fortschritt kommt durch gute Erholung." /></>; }
-function MealDetail() { return <><Title title="Mahlzeit Details" text="Nährwerte, Kalorien und Tagesziel auf einen Blick." /><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="flex items-center justify-between"><div><p className="text-sm font-bold text-slate-500">Kalorien</p><div className="text-6xl font-black">560</div><p className="text-slate-500">kcal</p></div><Ring value={68} label="Tagesziel" color="rose" /></div><div className="mt-5 grid grid-cols-3 gap-3"><Macro label="Protein" value="42 g" tone="violet" /><Macro label="Carbs" value="54 g" tone="rose" /><Macro label="Fett" value="18 g" tone="orange" /></div></Card><Callout pink icon={<Salad />} kicker="VYRA Tipp" title="Gute Balance" text="Diese Mahlzeit passt gut zu einem aktiven Tag." /></>; }
-function AthleteDetail({ setDetail }: { setDetail: (d: Detail) => void }) { return <><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="flex items-center gap-4"><Avatar name="Lukas Weber" large /><div><h2 className="text-2xl font-black">Lukas Weber</h2><p className="text-slate-500">Triathlon · 27 Jahre · Aktiv seit 8 Monaten</p></div></div></Card><button onClick={() => setDetail("sharing")} className="w-full text-left"><Callout icon={<Users />} kicker="Geteilte Daten" title="Teilweise freigegeben" text="Schlaf, Training, Aktivität und Ernährung sind sichtbar." /></button><button onClick={() => setDetail("fitness")} className="w-full text-left"><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="flex items-center justify-between"><Big value="82" label="Fitnesslevel /100" /><Ring value={82} label="Bereitschaft" /></div></Card></button><ListItem icon={<Activity />} title="Lauf - Intervall" text="10,8 km · 52 Min" value="Hohe Intensität" onClick={() => setDetail("run")} /></>; }
-function IntegrationsDetail({ setDetail }: { setDetail: (d: Detail) => void }) { return <><Title title="Meine Verbindungen" text="Geräte und Apps, die VYRA mit Demo-Daten simuliert." /><Connection icon={<Watch />} title="Apple Watch" text="Aktivität, Herzfrequenz, Schlaf" onClick={() => setDetail("sharing")} /><Connection icon={<Activity />} title="Garmin" text="Workouts, Herzfrequenz, Schritte" onClick={() => setDetail("sharing")} /><Connection icon={<HeartPulse />} title="Apple Health" text="Gesundheitsdaten zentral synchronisieren" onClick={() => setDetail("sharing")} /></>; }
-function SharingDetail() { return <><Title title="Datenfreigabe" text="Wähle, welche Daten VYRA nutzen darf, um Empfehlungen zu geben." /><Card className="border-white/70 bg-white/66 p-4 backdrop-blur-xl">{["Schlafdaten", "Aktivitätsdaten", "Herzfrequenz", "Ernährungsdaten", "Coach-Freigabe"].map((label, i) => <div key={label} className="flex items-center justify-between border-b border-slate-200/70 py-4 last:border-0"><div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-emerald-100 text-emerald-600"><ShieldCheck className="size-5" /></span><span><b>{label}</b><br /><small className="text-slate-500">{i === 4 ? "Optional mit deinem Coach teilen" : "Für personalisierte VYRA Insights"}</small></span></div><Toggle on={i !== 4} /></div>)}</Card></>; }
-function SettingsDetail({ setTab }: { setTab: (t: Tab) => void }) { return <><Title title="Profil & Einstellungen" text="Deine Ziele, Geräte und App-Einstellungen." /><Card className="border-white/70 bg-white/66 p-5 backdrop-blur-xl"><div className="flex items-center gap-4"><Avatar name="Max Mustermann" large /><div><h2 className="text-xl font-black">Max Mustermann</h2><p className="text-slate-500">23 Jahre · 178 cm · Demo-Profil</p></div></div></Card>{[["Meine Ziele","Muskulatur aufbauen"],["Geräte","Apple Watch verbunden"],["Datenfreigabe","Mit Coach & Apps"],["Benachrichtigungen","Empfehlungen aktiv"]].map(([a,b]) => <button key={a} onClick={() => a === "Datenfreigabe" ? setTab("profile") : undefined} className="flex w-full items-center justify-between rounded-[1.35rem] border border-white/70 bg-white/60 p-4 text-left shadow-sm backdrop-blur"><span><b>{a}</b><br /><small className="text-slate-500">{b}</small></span><ChevronRight className="size-5 text-slate-400" /></button>)}</>; }
-
-function Title({ title, text }: { title: string; text: string }) { return <div><h1 className="text-[34px] font-black leading-[1.05]">{title}</h1><p className="mt-2 text-[17px] leading-6 text-slate-500">{text}</p></div>; }
-function SectionTitle({ title, action, onClick }: { title: string; action?: string; onClick?: () => void }) { return <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-black">{title}</h2>{action && <button onClick={onClick} className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-slate-500">{action}<ChevronRight className="size-4" /></button>}</div>; }
-function Ring({ value, label, small, color = "indigo" }: { value: number; label: string; small?: boolean; color?: "indigo" | "rose" }) { const a = color === "rose" ? "#f43f7f" : "#625bff"; const b = color === "rose" ? "#ffe1eb" : "#e7e4ff"; return <div className={cn("grid shrink-0 place-items-center rounded-full p-3", small ? "size-24" : "size-36")} style={{ background: `conic-gradient(${a} 0 ${value}%, ${b} ${value}% 100%)` }}><div className="grid size-full place-items-center rounded-full bg-white/90 text-center"><span className={cn("font-black leading-none", small ? "text-2xl" : "text-4xl")}>{value}</span>{label && <span className="-mt-3 text-[11px] font-semibold text-slate-500">{label}</span>}</div></div>; }
-function Badge({ children }: { children: React.ReactNode }) { return <span className="mt-3 inline-flex rounded-xl bg-emerald-100 px-3 py-2 text-sm font-bold text-emerald-600">{children}</span>; }
-function ScorePart({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: number; tone: Tone }) { return <div className={cn("rounded-2xl p-3", toneBg(tone))}><div className={cn("mb-2 inline-flex size-8 items-center justify-center rounded-full bg-white/65", toneText(tone))}>{icon}</div><p className="text-xs font-semibold text-slate-500">{label}</p><p className="text-xl font-black">{value}</p><Progress value={value} tone={tone} /></div>; }
-function Metric({ icon, label, value, unit, tone, onClick }: { icon: React.ReactNode; label: string; value: string; unit: string; tone: Tone; onClick: () => void }) { return <button onClick={onClick} className="w-full text-left"><Card className="min-h-[136px] border-white/70 bg-white/62 p-4 backdrop-blur-xl"><div className="flex items-start justify-between"><span className={cn("grid size-10 place-items-center rounded-2xl", toneBg(tone), toneText(tone))}>{icon}</span><ChevronRight className="size-5 text-slate-300" /></div><p className="mt-4 text-sm font-semibold text-slate-500">{label}</p><div className="mt-1 flex items-end gap-1"><span className="text-3xl font-black">{value}</span><span className="pb-1 text-sm font-semibold text-slate-500">{unit}</span></div><Sparks tone={tone} /></Card></button>; }
-function Small({ icon, label, value, tone, onClick }: { icon: React.ReactNode; label: string; value: string; tone: Tone; onClick: () => void }) { return <button onClick={onClick} className="w-full text-left"><Card className="border-white/70 bg-white/62 p-3 backdrop-blur-xl"><span className={cn("grid size-9 place-items-center rounded-2xl", toneBg(tone), toneText(tone))}>{icon}</span><p className="mt-3 text-xs font-semibold text-slate-500">{label}</p><p className="text-2xl font-black">{value}</p><Sparks tone={tone} /></Card></button>; }
-function ListItem({ icon, title, text, value, onClick }: { icon: React.ReactNode; title: string; text: string; value: string; onClick: () => void }) { return <button onClick={onClick} className="w-full text-left"><Card className="border-white/70 bg-white/62 p-4 backdrop-blur-xl"><div className="flex items-center gap-3"><span className="grid size-12 place-items-center rounded-2xl bg-emerald-100 text-emerald-600">{icon}</span><span className="min-w-0 flex-1"><b>{title}</b><br /><small className="text-slate-500">{text}</small></span><span className="text-right text-sm font-semibold text-slate-500">{value}</span><ChevronRight className="size-5 text-slate-400" /></div></Card></button>; }
-function Meal({ icon, title, text, value, onClick }: { icon: React.ReactNode; title: string; text: string; value: string; onClick: () => void }) { return <button onClick={onClick} className="w-full text-left"><Card className="min-h-[152px] border-white/70 bg-white/62 p-4 backdrop-blur-xl"><div className="flex items-center justify-between"><span className="grid size-10 place-items-center rounded-2xl bg-rose-100 text-rose-500">{icon}</span><ChevronRight className="size-4 text-slate-400" /></div><h3 className="mt-3 font-black">{title}</h3><p className="mt-1 text-2xl font-black">{value}</p><p className="mt-1 text-sm leading-5 text-slate-500">{text}</p></Card></button>; }
-function Connection({ icon, title, text, onClick }: { icon: React.ReactNode; title: string; text: string; onClick: () => void }) { return <button onClick={onClick} className="flex w-full items-center gap-4 rounded-[1.35rem] border border-white/70 bg-white/64 p-4 text-left shadow-sm backdrop-blur-xl"><span className="grid size-14 place-items-center rounded-2xl bg-indigo-50 text-indigo-600">{icon}</span><span className="min-w-0 flex-1"><b>{title}</b> <small className="text-emerald-500">● Verbunden</small><br /><small className="text-slate-500">{text}</small></span><ChevronRight className="size-5 text-slate-400" /></button>; }
-function Callout({ icon, kicker, title, text, pink }: { icon: React.ReactNode; kicker: string; title: string; text: string; pink?: boolean }) { return <Card className={cn("border-white/70 p-4 backdrop-blur-xl", pink ? "bg-rose-50/80" : "bg-emerald-50/80")}><div className="flex items-center gap-4"><span className={cn("grid size-14 place-items-center rounded-full", pink ? "bg-rose-100 text-rose-500" : "bg-emerald-100 text-emerald-600")}>{icon}</span><div className="min-w-0 flex-1"><p className="text-xs font-black uppercase tracking-wide text-slate-400">{kicker}</p><h3 className="text-lg font-black">{title}</h3><p className="text-sm leading-5 text-slate-500">{text}</p></div><ChevronRight className="size-5 text-slate-500" /></div></Card>; }
-function DateStrip({ pink }: { pink?: boolean }) { const active = pink ? "Heute 31" : "Do 15"; return <div className="grid grid-cols-7 gap-2 rounded-[1.35rem] border border-white/70 bg-white/58 p-2 shadow-sm backdrop-blur-xl">{["Mo 12","Di 13","Mi 14",active,"Fr 16","Sa 17","So 18"].map((d) => <span key={d} className={cn("rounded-2xl px-2 py-3 text-center text-sm font-semibold text-slate-500", d === active && (pink ? "bg-rose-100 text-rose-500" : "bg-indigo-600 text-white"))}>{d}</span>)}</div>; }
-function Bars({ tone = "green" }: { tone?: Tone }) { return <div className="mt-5 flex h-36 items-end gap-3 border-b border-slate-200/70 px-2">{week.map(([day, h]) => <div key={day} className="flex flex-1 flex-col items-center gap-2"><span className={cn("w-full rounded-t-xl opacity-70", toneFill(tone))} style={{ height: `${h}%` }} /><span className="text-xs text-slate-500">{day}</span></div>)}</div>; }
-function Progress({ value, tone }: { value: number; tone: Tone }) { return <div className="mt-2 h-2 rounded-full bg-slate-200/70"><div className={cn("h-full rounded-full", toneFill(tone))} style={{ width: `${value}%` }} /></div>; }
-function Sparks({ tone }: { tone: Tone }) { return <div className="mt-3 flex h-8 items-end gap-1">{[20,35,48,42,61,76,92].map((h,i) => <span key={i} className={cn("w-2 rounded-full opacity-55", toneFill(tone))} style={{ height: `${h}%` }} />)}</div>; }
-function Macro({ label, value, tone }: { label: string; value: string; tone: Tone }) { return <div className={cn("rounded-2xl p-3", toneBg(tone))}><p className="text-xs font-semibold text-slate-500">{label}</p><p className="mt-2 text-xl font-black">{value}</p><Progress value={68} tone={tone} /></div>; }
-function MiniWide({ icon, title, value, tone }: { icon: React.ReactNode; title: string; value: string; tone: Tone }) { return <Card className="border-white/70 bg-white/62 p-4 backdrop-blur-xl"><span className={cn("grid size-10 place-items-center rounded-2xl", toneBg(tone), toneText(tone))}>{icon}</span><h3 className="mt-3 font-black">{title}</h3><p className="text-xl font-black">{value}</p><Progress value={72} tone={tone} /></Card>; }
-function CoachStat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) { return <Card className="min-h-[104px] border-white/70 bg-white/58 p-3 backdrop-blur-xl"><span className="grid size-9 place-items-center rounded-2xl bg-indigo-50 text-indigo-500">{icon}</span><p className="mt-3 text-2xl font-black">{value}</p><p className="text-xs font-semibold leading-4 text-slate-500">{label}</p></Card>; }
-function Big({ value, label }: { value: string; label: string }) { return <div><p className="text-5xl font-black leading-none">{value}</p><p className="mt-1 text-sm font-semibold text-slate-500">{label}</p></div>; }
-function Tiny({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl bg-white/55 p-2"><p className="text-[11px] text-slate-500">{label}</p><p className="text-sm font-black">{value}</p><Progress value={72} tone="green" /></div>; }
-function Avatar({ name, large }: { name: string; large?: boolean }) { const initials = useMemo(() => name.split(" ").map((p) => p[0]).join("").slice(0, 2), [name]); return <span className={cn("grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-100 to-emerald-100 font-black text-slate-700", large ? "size-20 text-xl" : "size-14")}>{initials}</span>; }
-function DetailPart({ icon, label, value, weight, tone, onClick }: { icon: React.ReactNode; label: string; value: string; weight: string; tone: Tone; onClick: () => void }) { return <button onClick={onClick} className="rounded-2xl border border-slate-200/70 bg-white/55 p-3 text-left"><span className={cn("grid size-10 place-items-center rounded-full", toneBg(tone), toneText(tone))}>{icon}</span><p className="mt-2 text-xs font-bold text-slate-500">{weight} Gewichtung</p><h3 className="mt-3 font-black">{label}</h3><p className="text-3xl font-black">{value}<span className="text-base text-slate-400">/100</span></p><Sparks tone={tone} /></button>; }
-function Impact({ title, rows, good }: { title: string; rows: string[]; good?: boolean }) { return <div className={cn("mt-4 rounded-2xl p-4", good ? "bg-emerald-50" : "bg-rose-50")}><h3 className="font-black">{good ? "+" : "-"} {title}</h3>{rows.map((r) => <p key={r} className="mt-1 text-sm text-slate-500">• {r}</p>)}</div>; }
-function Toggle({ on }: { on: boolean }) { return <span className={cn("relative h-8 w-14 rounded-full p-1", on ? "bg-indigo-600" : "bg-slate-200")}><span className={cn("block size-6 rounded-full bg-white shadow", on && "translate-x-6")} /></span>; }
-function toneBg(t: string) { return { indigo: "bg-indigo-100", violet: "bg-violet-100", rose: "bg-rose-100", green: "bg-emerald-100", blue: "bg-sky-100", orange: "bg-orange-100" }[t] ?? "bg-slate-100"; }
-function toneText(t: string) { return { indigo: "text-indigo-600", violet: "text-violet-600", rose: "text-rose-500", green: "text-emerald-600", blue: "text-sky-500", orange: "text-orange-500" }[t] ?? "text-slate-500"; }
-function toneFill(t: string) { return { indigo: "bg-indigo-400", violet: "bg-violet-400", rose: "bg-rose-400", green: "bg-emerald-400", blue: "bg-sky-400", orange: "bg-orange-400" }[t] ?? "bg-slate-400"; }
