@@ -147,4 +147,179 @@
   main.min-h-dvh nav.fixed button svg {
     color: currentColor !important;
   }
+
+  main.min-h-dvh {
+    width: min(390px, calc(100vw - 56px)) !important;
+    height: min(844px, calc(100dvh - 56px)) !important;
+    border-width: 10px !important;
+    border-radius: 52px !important;
+  }
+
+  main.min-h-dvh::before {
+    top: 12px !important;
+    width: 112px !important;
+    height: 28px !important;
+  }
+
+  main.min-h-dvh::after {
+    bottom: 7px !important;
+    width: 124px !important;
+    height: 5px !important;
+  }
+
+  main.min-h-dvh > div:first-child {
+    padding-top: 56px !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+    padding-bottom: 132px !important;
+  }
+
+  main.min-h-dvh .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 14px !important;
+  }
+
+  main.min-h-dvh header {
+    margin-bottom: 14px !important;
+  }
+
+  main.min-h-dvh header > div:first-child {
+    font-size: 28px !important;
+    line-height: 1 !important;
+  }
+
+  main.min-h-dvh h1 {
+    font-size: 27px !important;
+    line-height: 1.08 !important;
+  }
+
+  main.min-h-dvh h2 {
+    font-size: 18px !important;
+    line-height: 1.15 !important;
+  }
+
+  main.min-h-dvh p {
+    font-size: 14px !important;
+    line-height: 1.38 !important;
+  }
+
+  main.min-h-dvh small {
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+  }
+
+  main.min-h-dvh section {
+    border-radius: 24px !important;
+    padding: 14px !important;
+  }
+
+  main.min-h-dvh .grid.grid-cols-3 {
+    gap: 8px !important;
+  }
+
+  main.min-h-dvh .grid.grid-cols-3 > button > section,
+  main.min-h-dvh .grid.grid-cols-3 > section {
+    min-height: 102px !important;
+    padding: 11px !important;
+  }
+
+  main.min-h-dvh .grid.grid-cols-3 > button > section svg,
+  main.min-h-dvh .grid.grid-cols-3 > section svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  main.min-h-dvh .grid.grid-cols-3 > button > section span[class*="size-9"],
+  main.min-h-dvh .grid.grid-cols-3 > section span[class*="size-9"] {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 14px !important;
+  }
+
+  main.min-h-dvh [style*="conic-gradient"] {
+    width: 96px !important;
+    height: 96px !important;
+    padding: 8px !important;
+  }
+
+  main.min-h-dvh [style*="conic-gradient"].size-24 {
+    width: 76px !important;
+    height: 76px !important;
+    padding: 7px !important;
+  }
+
+  main.min-h-dvh .text-6xl {
+    font-size: 40px !important;
+    line-height: 0.95 !important;
+  }
+
+  main.min-h-dvh .text-5xl {
+    font-size: 36px !important;
+    line-height: 1 !important;
+  }
+
+  main.min-h-dvh .text-4xl {
+    font-size: 30px !important;
+    line-height: 1.05 !important;
+  }
+
+  main.min-h-dvh .text-3xl {
+    font-size: 24px !important;
+    line-height: 1.08 !important;
+  }
+
+  main.min-h-dvh .text-2xl {
+    font-size: 21px !important;
+    line-height: 1.1 !important;
+  }
+
+  main.min-h-dvh .h-36 {
+    height: 84px !important;
+  }
+
+  main.min-h-dvh .mt-5 {
+    margin-top: 12px !important;
+  }
+
+  main.min-h-dvh .mt-4 {
+    margin-top: 10px !important;
+  }
+
+  main.min-h-dvh .mt-3 {
+    margin-top: 8px !important;
+  }
+
+  main.min-h-dvh .gap-6 {
+    gap: 18px !important;
+  }
+
+  main.min-h-dvh .gap-4 {
+    gap: 12px !important;
+  }
+
+  main.min-h-dvh .gap-3 {
+    gap: 10px !important;
+  }
+
+  main.min-h-dvh nav.fixed {
+    left: 18px !important;
+    right: 18px !important;
+    bottom: 18px !important;
+    border-radius: 24px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    padding-top: 6px !important;
+    padding-bottom: 8px !important;
+  }
+
+  main.min-h-dvh nav.fixed button {
+    min-height: 44px !important;
+    border-radius: 18px !important;
+    font-size: 10px !important;
+    gap: 3px !important;
+  }
+
+  main.min-h-dvh nav.fixed button svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
 }
