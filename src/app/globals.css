@@ -175,6 +175,18 @@
   width: 100%;
   accent-color: var(--green);
 }
+.stress-unavailable { height: 7px; border-radius: 4px; background: var(--line); }
+.stress-section > .source { margin: 10px 0 20px; }
+.stress-facts { margin: 16px 0; font-size: 12px; }
+.stress-facts > div { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.stress-facts dt { color: var(--muted); }
+.stress-facts dd { margin: 5px 0 0; overflow-wrap: anywhere; }
+.stress-series { margin: 16px 0; }
+.stress-series h3 { font-size: 14px; }
+.stress-readings { max-height: 240px; overflow-y: auto; }
+.stress-readings > div { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.stress-readings small { grid-column: 1 / -1; color: var(--muted); overflow-wrap: anywhere; }
+.stress-readings meter { width: 100%; min-width: 0; accent-color: var(--dash-sleep); }
 .performance-hero {
   display: flex;
   flex-direction: column;

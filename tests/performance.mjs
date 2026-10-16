@@ -48,7 +48,7 @@ try {
   assert.equal(await page.locator(".balance-part").count(), 3);
   await page.screenshot({ path: `${out}/balance-dark.png` });
   await home();
-  await page.getByRole("button", { name: /Dein Stresslevel/ }).click();
+  await page.getByRole("button", { name: /Wie fühlst du dich/ }).click();
   await page
     .getByRole("slider", { name: "Stresslevel", exact: true })
     .fill("7");
@@ -57,7 +57,7 @@ try {
   await page.getByRole("button", { name: "Vorheriger Tag" }).click();
   assert(
     await page
-      .getByRole("button", { name: /Dein Stresslevel.*Eintragen/ })
+      .getByRole("button", { name: /Wie fühlst du dich.*Eintragen/ })
       .count(),
   );
   await page.getByRole("button", { name: /Training starten.*Manuell/ }).click();

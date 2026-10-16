@@ -56,6 +56,7 @@ export type CycleEntry = {
   note: string;
 };
 export type State = {
+  physiology?: PhysiologyReading[];
   sleepGoal?: number;
   trainingGoal?: number;
   stress?: Record<string, number>;
@@ -288,6 +289,21 @@ export function initialState(demo = true): State {
   };
 }
 export const STORAGE_KEY = "vyra-personal-v2";
+export type PhysiologyReading = {
+  id: string;
+  source: string;
+  kind: "pulse" | "hrv-sdnn" | "hrv-rmssd";
+  at: number;
+  value: number;
+};
+export function validPhysiology(v: PhysiologyReading): boolean {
+  return !!v && typeof v.id === "string" && v.id.length <= 1000 &&
+    typeof v.source === "string" && v.source.length > 0 && v.source.length <= 500 &&
+    ["pulse", "hrv-sdnn", "hrv-rmssd"].includes(v.kind) &&
+    Number.isFinite(v.at) && v.at > 0 && v.at <= 8640000000000000 &&
+    Number.isFinite(v.value) && v.value > 0 &&
+    v.value <= (v.kind === "pulse" ? 300 : 1000);
+}
 export function readState(raw: string): State {
   const parsed = JSON.parse(raw);
   if (
@@ -314,6 +330,8 @@ export function readState(raw: string): State {
     !Number.isNaN(Date.parse(v));
   const timestamp = (v: unknown) => n(v, 0, 8640000000000000);
   if (
+    (parsed.physiology !== undefined &&
+      (!Array.isArray(parsed.physiology) || !parsed.physiology.every(validPhysiology))) ||
     (parsed.sleepGoal !== undefined && !n(parsed.sleepGoal, 4, 12)) ||
     (parsed.trainingGoal !== undefined && !n(parsed.trainingGoal, 10, 300)) ||
     (parsed.stress !== undefined &&

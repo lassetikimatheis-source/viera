@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { stressEvidence } from "../src/lib/stress-data.ts";
 import {
   initialState,
   readState,
@@ -7,6 +8,30 @@ import {
   metricValue,
   shiftDate,
 } from "../src/lib/vyra-data.ts";
+
+test("Physiology preserves HRV methods, sources, time and excludes future readings", () => {
+  const state = initialState(false);
+  const at = new Date("2026-10-16T12:00:00").getTime();
+  state.physiology = [
+    { id: "a", source: "Watch", kind: "hrv-sdnn", at, value: 35 },
+    { id: "b", source: "Watch", kind: "hrv-rmssd", at, value: 40 },
+    { id: "c", source: "Other", kind: "hrv-sdnn", at, value: 55 },
+    { id: "future", source: "Watch", kind: "pulse", at: at + 10000, value: 80 },
+  ];
+  state.samples = [{ id: "workout", metric: "workout", date: "2026-10-16", value: 10,
+    source: "Watch", startedAt: at - 1000, endedAt: at + 1000 }];
+  const result = stressEvidence(state, "2026-10-16", at);
+  assert.equal(result.series.length, 3);
+  assert.equal(result.today.length, 3);
+  assert.equal(result.inWorkout(result.today[0]), true);
+  assert.equal(result.score, undefined);
+  assert.deepEqual(readState(JSON.stringify(state)).physiology, state.physiology);
+  for (const value of [-1, 0, 1001, null]) {
+    assert.throws(() => readState(JSON.stringify({ ...state, physiology: [{ ...state.physiology[0], value }] })));
+  }
+  state.permissions.heart = false;
+  assert.equal(stressEvidence(state, "2026-10-16", at).today.length, 0);
+});
 
 test("Portions scale calories and all macros without rounding the stored values", () => {
   const result = totals([

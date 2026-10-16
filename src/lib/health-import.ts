@@ -3,6 +3,8 @@ import {
   type Sample,
   type Metric,
   type SleepStage,
+  type PhysiologyReading,
+  validPhysiology,
 } from "./vyra-data";
 
 const types: Record<string, Metric> = {
@@ -16,6 +18,7 @@ const types: Record<string, Metric> = {
 export function parseHealthXML(text: string): {
   samples: Sample[];
   sources: string[];
+  physiology: PhysiologyReading[];
 } {
   const xml = new DOMParser().parseFromString(text, "application/xml");
   if (xml.querySelector("parsererror") || !xml.querySelector("HealthData"))
@@ -31,7 +34,25 @@ export function parseHealthXML(text: string): {
       stages?: SleepStage[];
     }
   >();
+  const physiology = new Map<string, PhysiologyReading>();
+  const sensorTypes: Record<string, PhysiologyReading["kind"]> = {
+    HKQuantityTypeIdentifierHeartRate: "pulse",
+    HKQuantityTypeIdentifierHeartRateVariabilitySDNN: "hrv-sdnn",
+    HKQuantityTypeIdentifierHeartRateVariabilityRMSSD: "hrv-rmssd",
+  };
   xml.querySelectorAll("Record").forEach((record) => {
+    const kind = sensorTypes[record.getAttribute("type") || ""];
+    if (kind) {
+      const source = record.getAttribute("sourceName") || "Apple Health";
+      const at = Date.parse((record.getAttribute("startDate") || "").replace(" ", "T").replace(" ", ""));
+      const unit = record.getAttribute("unit");
+      if (kind === "pulse" ? unit !== "count/min" : !["ms", "s"].includes(unit || "")) return;
+      const value = Number(record.getAttribute("value")) * (kind !== "pulse" && unit === "s" ? 1000 : 1);
+      const id = `sensor:${source}:${kind}:${at}`;
+      const reading = { id, source, kind, at, value };
+      if (validPhysiology(reading)) physiology.set(id, reading);
+      return;
+    }
     const metric = types[record.getAttribute("type") || ""];
     if (!metric) return;
     const start = record.getAttribute("startDate") || "";
@@ -142,7 +163,7 @@ export function parseHealthXML(text: string): {
       ).replace("HKWorkoutActivityType", ""),
     });
   });
-  if (!samples.length)
+  if (!samples.length && !physiology.size)
     throw new Error("Keine unterstützten Messwerte in dieser Datei.");
-  return { samples, sources: [...new Set(samples.map((s) => s.source))] };
+  return { samples, physiology: [...physiology.values()], sources: [...new Set([...samples, ...physiology.values()].map((s) => s.source))] };
 }

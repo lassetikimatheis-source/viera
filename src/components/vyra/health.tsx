@@ -24,7 +24,6 @@ import {
 } from "recharts";
 import {
   Metric,
-  Sample,
   dateKey,
   displayDate,
   metricInfo,
@@ -379,10 +378,7 @@ export function HealthDetail() {
 }
 export function Connections() {
   const { data, setData, toast } = useVyra();
-  const [parsed, setParsed] = useState<{
-    samples: Sample[];
-    sources: string[];
-  } | null>(null);
+  const [parsed, setParsed] = useState<ReturnType<typeof parseHealthXML> | null>(null);
   const [source, setSource] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -445,7 +441,10 @@ export function Connections() {
     const samples = parsed.samples.filter(
       (s) => s.source === source && data.permissions[groupFor[s.metric]],
     );
-    if (!samples.length) {
+    const physiology = parsed.physiology.filter(
+      (r) => r.source === source && data.permissions.heart,
+    );
+    if (!samples.length && !physiology.length) {
       setError("Keine freigegebenen Daten dieser Quelle.");
       return;
     }
@@ -454,6 +453,7 @@ export function Connections() {
     setData((s) => ({
       ...s,
       demo: false,
+      physiology: [...new Map([...(s.physiology || []), ...physiology].map((r) => [r.id, r])).values()],
       entries: s.entries.filter((e) => !e.entryId.startsWith("demo-")),
       water: s.demo ? {} : s.water,
       samples: [
@@ -465,7 +465,7 @@ export function Connections() {
       ],
     }));
     setParsed(null);
-    toast(`${samples.length} Werte importiert`);
+    toast(`${samples.length + physiology.length} Werte importiert`);
   }
   return (
     <>
@@ -518,9 +518,10 @@ export function Connections() {
             </select>
           </Field>
           <p className="note">
-            {parsed.samples.filter((s) => s.source === source).length} Werte
+            {[...parsed.samples, ...parsed.physiology].filter((s) => s.source === source).length} Werte
             dieser Quelle. Pro Tag und Messwert wird der bisherige Wert ersetzt,
             damit Watch und iPhone nicht doppelt zählen.
+            Puls und HRV bleiben als einzelne Messungen mit Zeitpunkt erhalten.
           </p>
           <button className="button" onClick={saveImport}>
             Ausgewählte Daten importieren
@@ -532,7 +533,7 @@ export function Connections() {
         {[
           ["sleep", "Schlaf"],
           ["activity", "Aktivität & Training"],
-          ["heart", "Herzfrequenz"],
+          ["heart", "Herzfrequenz & HRV"],
           ["body", "Körperwerte"],
         ].map(([key, label]) => (
           <Toggle

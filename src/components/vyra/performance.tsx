@@ -13,6 +13,7 @@ import {
   Link2,
 } from "lucide-react";
 import { balance, elapsed, sleepStages } from "@/lib/dashboard-metrics";
+import { stressEvidence } from "@/lib/stress-data";
 import {
   dateKey,
   metricValue,
@@ -134,12 +135,59 @@ export function DashboardRings() {
   );
 }
 export function StressBar() {
-  const { data, day, setData } = useVyra();
+  const { data, day, setData, go } = useVyra();
   const [open, setOpen] = useState(false),
+    [details, setDetails] = useState(false),
+    [now, setNow] = useState(() => Date.now()),
     [draft, setDraft] = useState(5);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+  const evidence = stressEvidence(data, day, now);
   const value = data.stress?.[day];
   return (
     <section className="stress-section">
+      <button className="stress-heading" onClick={() => setDetails(true)}>
+        <span><b>Körperlicher Stress</b><small>Keine aktuelle Einschätzung</small></span>
+        <ChevronRight size={16} />
+      </button>
+      <div className="stress-unavailable" aria-label="Kein berechneter Stresswert" />
+      <p className="source">{evidence.latest
+        ? `Letzter Import-Messpunkt: ${time(evidence.latest.at)} · ${evidence.latest.source}`
+        : "Keine Sensordaten für diesen Tag"}</p>
+      {details && <Sheet title="Körperlicher Stress" onClose={() => setDetails(false)}>
+        <p className="notice">Noch kein berechneter Stresswert. Puls und HRV sind Hinweise auf körperliche Belastung, keine Messung deines psychischen Stresses. Eine geprüfte VYRA-Berechnung ist noch nicht verfügbar.</p>
+        <dl className="stress-facts">
+          <div><dt>Datenzugriff</dt><dd>{data.permissions.heart ? "Health-Dateiimport" : "Herzdaten deaktiviert"}</dd></div>
+          <div><dt>Letzte Messung am gewählten Tag</dt><dd>{evidence.latest ? new Date(evidence.latest.at).toLocaleString("de-DE") : "Keine Messung"}</dd></div>
+          <div><dt>Datenbasis</dt><dd>{evidence.today.length} Messpunkte · keine Live-Verbindung</dd></div>
+        </dl>
+        <SectionTitle>HRV im Tagesverlauf</SectionTitle>
+        {evidence.series.length === 0 && <p className="note">Es fehlen zeitgestempelte HRV-Messungen. Schlafdauer und täglicher Ruhepuls allein reichen nicht aus.</p>}
+        {evidence.series.map((series) => <section className="stress-series" key={`${series.source}:${series.kind}`}>
+          <h3>{series.kind === "hrv-sdnn" ? "HRV · SDNN" : "HRV · RMSSD"}</h3>
+          <p className="source">{series.source} · {series.days} Tage mit Messungen bis zu diesem Datum</p>
+          {series.points.length ? <div className="stress-readings">
+            {series.points.slice(-240).map((r) => <div key={r.id}>
+              <time>{time(r.at)}</time>
+              <meter min={0} max={1000} value={r.value} aria-label={`HRV ${time(r.at)}`} />
+              <b>{number(r.value, 1)} ms</b>
+              <small>{evidence.inWorkout(r) ? "Während Training" : "Aktivitätskontext unbekannt"}</small>
+            </div>)}
+          </div> : <p className="note">Keine Messung an diesem Tag.</p>}
+        </section>)}
+        <SectionTitle>Pulsmessungen</SectionTitle>
+        <div className="stress-readings">
+          {evidence.today.filter((r) => r.kind === "pulse").slice(-20).map((r) => <div key={r.id}>
+            <time>{time(r.at)}</time><b>{number(r.value)} bpm</b>
+            <small>{r.source} · {evidence.inWorkout(r) ? "Während Training" : "Aktivitätskontext unbekannt"}</small>
+          </div>)}
+        </div>
+        <p className="note">Bis zu 240 letzte HRV- und 20 Pulsmessungen. HRV-Verfahren und Gerätequellen bleiben getrennt. Trainingsmessungen werden nicht als psychischer Stress bewertet. Fehlende Bewegungsdaten bedeuten nicht automatisch Ruhe.</p>
+        <button className="button secondary" onClick={() => { setDetails(false); go("health", "connections"); }}><Link2 size={16} /> Health-Daten importieren</button>
+        <p className="note">Garmin-Herstellerwerte sind noch nicht angebunden. Apple Health benötigt für automatische Synchronisierung eine native iPhone-Anbindung.</p>
+      </Sheet>}
       <button
         className="stress-heading"
         onClick={() => {
@@ -148,7 +196,7 @@ export function StressBar() {
         }}
       >
         <span>
-          <b>Dein Stresslevel</b>
+          <b>Wie fühlst du dich?</b>
           <small>Persönlicher Selbstcheck</small>
         </span>
         <strong>{value === undefined ? "Eintragen" : `${value}/10`}</strong>
