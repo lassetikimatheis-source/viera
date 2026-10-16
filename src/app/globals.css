@@ -26,9 +26,13 @@
   font-size: 10px;
 }
 .performance-ring {
+  position: relative;
   width: 100%;
+  max-width: 108px;
   aspect-ratio: 1;
-  padding: 7px;
+  flex: none;
+  min-height: 0;
+  --ring-inset: 7px;
   border-radius: 50%;
   background: conic-gradient(
     from -90deg,
@@ -37,9 +41,9 @@
   );
 }
 .performance-ring > div {
+  position: absolute;
+  inset: var(--ring-inset);
   border-radius: 50%;
-  width: 100%;
-  height: 100%;
   background: var(--surface);
   display: flex;
   flex-direction: column;
@@ -57,7 +61,7 @@
   text-align: center;
 }
 .balance-ring .performance-ring {
-  padding: 9px;
+  --ring-inset: 8px;
 }
 .balance-ring .performance-ring strong {
   font-size: 32px;
@@ -180,7 +184,8 @@
 }
 .performance-hero .performance-ring {
   width: 176px;
-  padding: 12px;
+  max-width: 176px;
+  --ring-inset: 12px;
 }
 .performance-hero .performance-ring strong {
   font-size: 48px;
@@ -368,13 +373,13 @@
     gap: 7px;
   }
   .performance-ring {
-    padding: 5px;
+    --ring-inset: 5px;
   }
   .performance-ring strong {
     font-size: 23px;
   }
   .balance-ring .performance-ring {
-    padding: 7px;
+    --ring-inset: 7px;
   }
   .balance-ring .performance-ring strong {
     font-size: 28px;
@@ -933,13 +938,18 @@ svg {
   line-height: 1.6;
   margin-top: 8px;
 }
+.phone-viewport {
+  width: calc(390px * var(--device-scale, 1));
+  height: calc(844px * var(--device-scale, 1));
+}
 .phone {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 406px;
-  height: min(874px, calc(100dvh - 48px));
-  min-height: 400px;
+  width: 390px;
+  height: 844px;
+  transform: scale(var(--device-scale, 1));
+  transform-origin: top left;
   border: 8px solid #242826;
   border-radius: 46px;
   overflow: hidden;
@@ -967,7 +977,12 @@ svg {
   width: 108px;
   height: 26px;
   border-radius: 20px;
-  background: #202421;
+  background: #080a09;
+}
+.device-signals {
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 .app-header {
   flex: 0 0 62px;
@@ -1912,6 +1927,11 @@ svg {
   text-decoration: underline;
 }
 @media (max-width: 767px) {
+  .phone-viewport {
+    width: 100%;
+    max-width: 500px;
+    height: 100dvh;
+  }
   .stage {
     padding: 0;
     min-height: 100dvh;
@@ -1922,6 +1942,7 @@ svg {
     display: none;
   }
   .phone {
+    transform: none;
     width: 100%;
     height: 100dvh;
     min-height: 0;
