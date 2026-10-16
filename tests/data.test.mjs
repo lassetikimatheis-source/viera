@@ -69,3 +69,45 @@ test("Local backups roundtrip and invalid nested values are rejected", () => {
     ),
   );
 });
+
+test("Dashboard extensions validate backups without breaking existing saves", () => {
+  const state = initialState(false);
+  state.training = {
+    id: "session",
+    title: "Laufen",
+    startedAt: Date.now() - 1000,
+    pausedMs: 0,
+  };
+  state.stress = { "2026-10-16": 7 };
+  state.sleepGoal = 8;
+  state.trainingGoal = 60;
+  assert.equal(readState(JSON.stringify(state)).training.title, "Laufen");
+  assert.throws(() =>
+    readState(JSON.stringify({ ...state, stress: { "2026-10-16": 11 } })),
+  );
+  assert.throws(() => readState(JSON.stringify({ ...state, sleepGoal: 0 })));
+  assert.throws(() =>
+    readState(
+      JSON.stringify({
+        ...state,
+        training: { ...state.training, pausedMs: -1 },
+      }),
+    ),
+  );
+  state.samples = [
+    {
+      id: "sleep",
+      metric: "sleep",
+      date: "2026-10-16",
+      value: 1,
+      source: "Import",
+      stages: [{ phase: "rem", start: 100, end: 200 }],
+    },
+  ];
+  assert.equal(
+    readState(JSON.stringify(state)).samples[0].stages[0].phase,
+    "rem",
+  );
+  state.samples[0].stages[0].end = 50;
+  assert.throws(() => readState(JSON.stringify(state)));
+});

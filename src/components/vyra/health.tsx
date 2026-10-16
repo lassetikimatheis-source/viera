@@ -162,7 +162,11 @@ export function HealthScreen() {
 export function HealthDetail() {
   const { data, setData, route, day, toast } = useVyra();
   const metric = (
-    route.detail && route.detail in metricInfo ? route.detail : "steps"
+    route.detail === "sleep-log"
+      ? "sleep"
+      : route.detail && route.detail in metricInfo
+        ? route.detail
+        : "steps"
   ) as Metric;
   const info = metricInfo[metric];
   const [period, setPeriod] = useState("Woche"),

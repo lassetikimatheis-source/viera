@@ -12,6 +12,11 @@
 
 ## External services and honest limits
 
+- Dashboard rings show sleep-goal completion, a beta goal-balance index and training minutes. The balance is explicitly not a clinical health score: sleep target 40%, step target 30%, logged protein target 30%, capped per component; all three must be present.
+- Sleep-stage timelines use imported Apple Health phase records. Demo phases are clearly illustrative. Conflicting overlapping phases are unclassified; missing phases are not inferred from duration.
+- Stress is a dated subjective 0-10 check-in, not HR/HRV-derived physiological stress.
+- The manual training timer persists across reloads, supports pause/resume and saves duration plus perceived exertion. It does not detect Apple Watch/WHOOP sessions or invent live heart rate; those need native/provider integration.
+
 - The web app cannot request native HealthKit permissions. Automatic Apple Health sync requires an iOS companion/native implementation; importing an export works today.
 - AI photo estimates and chat have server endpoints but remain unavailable until both optional variables in .env.example are configured. No fabricated results are shown. Photo estimates require explicit consent and confirmation before logging.
 - Before enabling public AI access, add authenticated users, durable rate limiting and provider spending limits. The current process-local limiter is not a distributed abuse control.

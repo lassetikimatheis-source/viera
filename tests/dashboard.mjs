@@ -54,15 +54,19 @@ try {
   await page.reload();
   await page.getByRole("heading", { name: "Dein Rhythmus" }).waitFor();
   assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
-  await page.locator(".dash-vital").first().click();
+  await page
+    .getByRole("button", { name: "Schlaf im Detail", exact: true })
+    .click();
   assert(page.url().includes("#health/sleep"));
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Home", exact: true })
     .click();
   await page.getByRole("button", { name: "Vorheriger Tag" }).click();
-  await page.locator(".dash-vital").nth(1).click();
-  assert(page.url().includes("#health/heart"));
+  await page
+    .getByRole("button", { name: "Gesundheitsbalance im Detail", exact: true })
+    .click();
+  assert(page.url().includes("#health/balance"));
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Home", exact: true })
@@ -76,11 +80,10 @@ try {
   });
   await page.reload();
   await page.getByText("Noch kein Verlauf", { exact: true }).waitFor();
-  assert.deepEqual(await page.locator(".dash-vital strong").allTextContents(), [
-    "–",
-    "–",
-    "–",
-  ]);
+  assert.deepEqual(
+    await page.locator(".performance-rings strong").allTextContents(),
+    ["–", "–", "–"],
+  );
   await page.screenshot({ path: `${out}/empty-dark.png` });
   await page.getByRole("button", { name: "Hellen Modus aktivieren" }).click();
   await page.reload();

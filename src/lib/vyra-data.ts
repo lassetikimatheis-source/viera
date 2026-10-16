@@ -25,6 +25,22 @@ export type Sample = {
   value: number;
   source: string;
   title?: string;
+  stages?: SleepStage[];
+  startedAt?: number;
+  endedAt?: number;
+  effort?: number;
+};
+export type SleepStage = {
+  phase: "awake" | "rem" | "light" | "deep" | "asleep";
+  start: number;
+  end: number;
+};
+export type Training = {
+  id: string;
+  title: string;
+  startedAt: number;
+  pausedAt?: number;
+  pausedMs: number;
 };
 export type Supplement = {
   id: string;
@@ -40,6 +56,10 @@ export type CycleEntry = {
   note: string;
 };
 export type State = {
+  sleepGoal?: number;
+  trainingGoal?: number;
+  stress?: Record<string, number>;
+  training?: Training | null;
   version: 2;
   demo: boolean;
   profile: {
@@ -292,6 +312,27 @@ export function readState(raw: string): State {
     typeof v === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(v) &&
     !Number.isNaN(Date.parse(v));
+  const timestamp = (v: unknown) => n(v, 0, 8640000000000000);
+  if (
+    (parsed.sleepGoal !== undefined && !n(parsed.sleepGoal, 4, 12)) ||
+    (parsed.trainingGoal !== undefined && !n(parsed.trainingGoal, 10, 300)) ||
+    (parsed.stress !== undefined &&
+      (!parsed.stress ||
+        typeof parsed.stress !== "object" ||
+        Array.isArray(parsed.stress) ||
+        !Object.entries(parsed.stress).every(
+          ([d, v]) => day(d) && n(v, 0, 10),
+        ))) ||
+    (parsed.training != null &&
+      (!s(parsed.training.id) ||
+        !s(parsed.training.title, 80) ||
+        !timestamp(parsed.training.startedAt) ||
+        !n(parsed.training.pausedMs, 0, 864000000) ||
+        (parsed.training.pausedAt !== undefined &&
+          (!timestamp(parsed.training.pausedAt) ||
+            parsed.training.pausedAt < parsed.training.startedAt))))
+  )
+    throw new Error("Ungültige Dashboard-Daten.");
   const food = (f: Food) =>
     f &&
     s(f.id) &&
@@ -342,7 +383,20 @@ export function readState(raw: string): State {
         day(v.date) &&
         n(v.value) &&
         s(v.source) &&
-        (!v.title || s(v.title)),
+        (!v.title || s(v.title)) &&
+        (v.startedAt === undefined || timestamp(v.startedAt)) &&
+        (v.endedAt === undefined || timestamp(v.endedAt)) &&
+        (v.effort === undefined || n(v.effort, 1, 10)) &&
+        (v.stages === undefined ||
+          (Array.isArray(v.stages) &&
+            v.stages.every(
+              (p) =>
+                p &&
+                ["awake", "rem", "light", "deep", "asleep"].includes(p.phase) &&
+                timestamp(p.start) &&
+                timestamp(p.end) &&
+                p.end > p.start,
+            ))),
     ) ||
     !Object.entries(parsed.water).every(([d, v]) => day(d) && n(v)) ||
     !parsed.supplements.every(

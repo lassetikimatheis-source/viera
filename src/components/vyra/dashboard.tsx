@@ -31,6 +31,7 @@ import {
 } from "@/lib/vyra-data";
 import { useVyra } from "./store";
 import { DateNav, Meter, SectionTitle } from "./ui";
+import { DashboardRings, StressBar, TrainingEntry } from "./performance";
 
 const views = [
   {
@@ -121,29 +122,12 @@ export function Dashboard() {
         </button>
       </div>
       <DateNav />
-      <section
-        className="dash-vitals"
-        aria-label="Deine wichtigsten Tageswerte"
-      >
-        {views.map(({ key, name, unit, color, icon: Icon }) => (
-          <button
-            key={key}
-            className="dash-vital"
-            onClick={() => go("health", key)}
-            style={{ borderTopColor: color }}
-          >
-            <span className="dash-vital-label">
-              <Icon size={16} style={{ color }} />
-              {name}
-            </span>
-            <strong>{display(value(key), key)}</strong>
-            <small>{key === "sleep" ? "Std. / Min." : unit}</small>
-            <span className="dash-vital-link">
-              Details <ArrowUpRight size={12} />
-            </span>
-          </button>
-        ))}
-      </section>
+      <DashboardRings />
+      <p className="ring-disclaimer">
+        Balance: Zielerfüllung, keine medizinische Bewertung.
+      </p>
+      <TrainingEntry />
+      <StressBar />
       <section className="dash-trend" aria-label="Dein Wochenverlauf">
         <div className="dash-section-head">
           <h2>Dein Rhythmus</h2>

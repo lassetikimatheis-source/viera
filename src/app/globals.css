@@ -1,5 +1,398 @@
 @import "tailwindcss";
 
+.performance-rings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 0;
+}
+.performance-rings > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  gap: 9px;
+}
+.performance-rings > button > svg {
+  color: var(--muted);
+}
+.performance-rings b {
+  font-size: 12px;
+  font-weight: 600;
+}
+.performance-rings > button > small {
+  font-size: 10px;
+}
+.performance-ring {
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 7px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from -90deg,
+    var(--ring-color) var(--ring-value),
+    var(--line) 0
+  );
+}
+.performance-ring > div {
+  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.performance-ring strong {
+  font-size: 27px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.performance-ring small {
+  font-size: 9px;
+  text-align: center;
+}
+.balance-ring .performance-ring {
+  padding: 9px;
+}
+.balance-ring .performance-ring strong {
+  font-size: 32px;
+}
+.ring-disclaimer {
+  font-size: 10px;
+  text-align: center;
+  color: var(--muted);
+  margin-top: -8px;
+}
+.training-entry {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  width: 100%;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.training-entry > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.training-entry b,
+.training-entry small {
+  display: block;
+}
+.training-entry b {
+  font-size: 13px;
+}
+.training-entry small {
+  margin-top: 4px;
+  font-size: 10px;
+}
+.training-entry-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+}
+.stress-heading {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 16px;
+  padding: 0;
+}
+.stress-heading > span {
+  flex: 1;
+}
+.stress-heading b {
+  font-size: 14px;
+  display: block;
+}
+.stress-heading small {
+  font-size: 10px;
+  display: block;
+  margin-top: 4px;
+}
+.stress-heading strong {
+  font-size: 12px;
+}
+.stress-track {
+  display: flex;
+  gap: 3px;
+  position: relative;
+  height: 7px;
+  border-radius: 4px;
+}
+.stress-track > span {
+  flex: 1;
+  border-radius: 2px;
+  background: var(--mint);
+}
+.stress-track > span:nth-child(2) {
+  background: var(--amber);
+}
+.stress-track > span:nth-child(3) {
+  background: var(--rose);
+}
+.stress-track i {
+  position: absolute;
+  top: -4px;
+  width: 3px;
+  height: 15px;
+  background: var(--ink);
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+.stress-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 9px;
+  margin-top: 9px;
+}
+.stress-input {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+  font-size: 28px;
+  text-align: center;
+}
+.stress-input input {
+  width: 100%;
+  accent-color: var(--green);
+}
+.performance-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+}
+.performance-hero .performance-ring {
+  width: 176px;
+  padding: 12px;
+}
+.performance-hero .performance-ring strong {
+  font-size: 48px;
+}
+.performance-hero .performance-ring small {
+  font-size: 11px;
+}
+.performance-hero p {
+  font-size: 14px;
+  color: var(--muted);
+}
+.sleep-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.sleep-lane {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+.sleep-lane > span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.sleep-lane > div {
+  position: relative;
+  height: 30px;
+  background: var(--panel);
+}
+.sleep-lane button {
+  position: absolute;
+  top: 2px;
+  height: 26px;
+  min-width: 2px;
+  border-radius: 3px;
+  padding: 0;
+}
+.sleep-times {
+  display: flex;
+  justify-content: space-between;
+  margin-left: 80px;
+  margin-top: -10px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.phase-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.phase-totals > div {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+.phase-totals span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.phase-totals i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.phase-totals b {
+  display: block;
+  font-size: 17px;
+  margin-top: 6px;
+}
+.balance-part {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.balance-part b {
+  font-size: 13px;
+  display: block;
+}
+.balance-part small {
+  font-size: 11px;
+  display: block;
+  margin-top: 5px;
+}
+.balance-part strong {
+  font-size: 15px;
+}
+.balance-part .meter {
+  grid-column: 1/-1;
+}
+.workout-history {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.workout-history > span {
+  flex: 1;
+  min-width: 0;
+}
+.workout-history b {
+  font-size: 13px;
+  display: block;
+  overflow-wrap: anywhere;
+}
+.workout-history small {
+  font-size: 10px;
+  display: block;
+}
+.workout-history strong {
+  font-size: 13px;
+}
+.training-live-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--green);
+  font-size: 11px;
+}
+.live-dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.training-clock {
+  font-size: 46px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: center;
+  padding: 26px 0 8px;
+}
+.live-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.live-metrics > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 15px;
+}
+.live-metrics span {
+  font-size: 11px;
+}
+.live-metrics strong {
+  font-size: 32px;
+}
+.live-metrics small {
+  font-size: 10px;
+}
+.training-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.active-training-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--mint);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.active-training-banner span {
+  margin-left: auto;
+}
+@media (max-width: 360px) {
+  .performance-rings {
+    gap: 7px;
+  }
+  .performance-ring {
+    padding: 5px;
+  }
+  .performance-ring strong {
+    font-size: 23px;
+  }
+  .balance-ring .performance-ring {
+    padding: 7px;
+  }
+  .balance-ring .performance-ring strong {
+    font-size: 28px;
+  }
+  .performance-ring small {
+    font-size: 8px;
+  }
+  .performance-rings b {
+    font-size: 11px;
+  }
+  .performance-rings > button > small {
+    font-size: 9px;
+  }
+  .training-clock {
+    font-size: 39px;
+  }
+}
+
 /* Dashboard uses the same data in both appearances. */
 :root[data-theme="dark"] {
   --ink: #edf1f1;
@@ -17,6 +410,7 @@
   --dash-sleep: #b9a5f0;
   --dash-heart: #ef96ab;
   --dash-activity: #82d4ae;
+  --dash-load: #8dbce9;
 }
 .dashboard-v3 {
   display: flex;
@@ -427,6 +821,7 @@
   --dash-sleep: #7863b6;
   --dash-heart: #c25a72;
   --dash-activity: #217258;
+  --dash-load: #487fad;
 }
 @theme inline {
   --color-background: var(--surface);

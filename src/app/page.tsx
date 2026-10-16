@@ -10,6 +10,7 @@ import {
 import { useEffect, useRef } from "react";
 import { Dashboard } from "@/components/vyra/dashboard";
 import { ThemeControl } from "@/components/vyra/theme";
+import { PerformanceDetail, TrainingMode } from "@/components/vyra/performance";
 import { Provider, useVyra } from "@/components/vyra/store";
 import { IconButton } from "@/components/vyra/ui";
 import {
@@ -87,9 +88,25 @@ function App() {
             </button>
           </div>
         </header>
+        {data.training && route.detail !== "training" && (
+          <button
+            className="active-training-banner"
+            onClick={() => go("health", "training")}
+          >
+            <Activity size={15} /> Training läuft · {data.training.title}{" "}
+            <span>Öffnen</span>
+          </button>
+        )}
         <div ref={scroll} className="app-scroll">
           <div className="screen" key={`${route.tab}/${route.detail || ""}`}>
-            {route.detail === "connections" ? (
+            {route.tab === "health" && route.detail === "training" ? (
+              <TrainingMode />
+            ) : route.tab === "health" &&
+              ["sleep", "balance", "strain"].includes(route.detail || "") ? (
+              <PerformanceDetail
+                kind={route.detail as "sleep" | "balance" | "strain"}
+              />
+            ) : route.detail === "connections" ? (
               <Connections />
             ) : route.tab === "home" ? (
               <Dashboard />

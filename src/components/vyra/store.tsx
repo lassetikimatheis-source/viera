@@ -75,7 +75,9 @@ function StateProvider({ children }: { children: ReactNode }) {
   const [data, updateData] = useState<State>(loaded.data);
   const latest = useRef(data);
   const [day, setDay] = useState(dateKey);
-  const [route, setRoute] = useState<Route>(parseRoute);
+  const [route, setRoute] = useState<Route>(() =>
+    loaded.data.training ? { tab: "health", detail: "training" } : parseRoute(),
+  );
   const [message, setMessage] = useState(loaded.error);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
