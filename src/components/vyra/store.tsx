@@ -19,6 +19,7 @@ import {
   STORAGE_KEY,
   Tab,
 } from "@/lib/vyra-data";
+import { sandboxMode } from "@/lib/sandbox";
 type Route = { tab: Tab; detail?: string };
 type Context = {
   data: State;
@@ -61,10 +62,11 @@ export function Provider({ children }: { children: ReactNode }) {
   );
 }
 function StateProvider({ children }: { children: ReactNode }) {
+  const storageKey = sandboxMode() ? "vyra-test-v1" : STORAGE_KEY;
   const [loaded] = useState(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return { data: raw ? readState(raw) : initialState(), error: "" };
+      const raw = localStorage.getItem(storageKey);
+      return { data: raw ? readState(raw) : initialState(!sandboxMode()), error: "" };
     } catch {
       return {
         data: initialState(false),
@@ -93,13 +95,13 @@ function StateProvider({ children }: { children: ReactNode }) {
     latest.current = next;
     updateData(next);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      localStorage.setItem(storageKey, JSON.stringify(next));
     } catch {
       setMessage(
         "Speicher voll. Bitte Daten exportieren, bevor du die App schließt.",
       );
     }
-  }, []);
+  }, [storageKey]);
   function go(tab: Tab, detail?: string) {
     history.pushState({}, "", "#" + tab + (detail ? "/" + detail : ""));
     setRoute({ tab, detail });

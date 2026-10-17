@@ -39,7 +39,7 @@ struct ContentView: View {
                 Form {
                     Section {
                         Label("Apple Health", systemImage: "heart.fill").foregroundStyle(.pink)
-                        Text("Übernimm freigegebene Daten der letzten 30 Tage. Anschließend wählst du in VYRA die Quelle aus und bestätigst den Import.")
+                        Text("Übernimm freigegebene Daten der letzten 30 Tage, aktuelle Pulsmessungen der letzten 12 Stunden. Anschließend wählst du in VYRA die Quelle aus und bestätigst den Import.")
                     }
                     Section("Du entscheidest") {
                         Text("Schritte, Schlaf, Puls, Ruhepuls, HRV, Aktivenergie, Gewicht und Trainings. VYRA schreibt keine Daten in Apple Health.")

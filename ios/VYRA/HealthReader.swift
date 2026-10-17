@@ -30,7 +30,11 @@ final class HealthReader {
         var workouts: [[String: String]] = []
         for (identifier, unit) in quantities {
             let type = HKObjectType.quantityType(forIdentifier: identifier)!
-            for case let sample as HKQuantitySample in try await samples(type, predicate) {
+            // Dense pulse readings need a shorter window to keep the preview bounded.
+            let selectedPredicate = identifier == .heartRate
+                ? HKQuery.predicateForSamples(withStart: now.addingTimeInterval(-12 * 3600), end: now, options: .strictStartDate)
+                : predicate
+            for case let sample as HKQuantitySample in try await samples(type, selectedPredicate) {
                 records.append([
                     "type": identifier.rawValue, "sourceName": sample.sourceRevision.source.name,
                     "value": String(sample.quantity.doubleValue(for: unit)), "unit": unit.unitString,

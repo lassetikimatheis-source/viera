@@ -12,7 +12,6 @@ import {
   Scale,
   Trash2,
   Upload,
-  Watch,
 } from "lucide-react";
 import {
   Bar,
@@ -34,6 +33,8 @@ import {
 } from "@/lib/vyra-data";
 import { parseHealthXML } from "@/lib/health-import";
 import { nativeHealthAvailable, nativeHealthXML, requestNativeHealth } from "@/lib/native-health";
+import { IntegrationConnections } from "./integrations";
+import { sandboxMode } from "@/lib/sandbox";
 import { useVyra } from "./store";
 import {
   BackTitle,
@@ -507,6 +508,14 @@ export function Connections() {
           : "Apple Health kann nur über eine native iPhone-App direkt freigegeben werden. Hier kannst du deinen Health-Export lokal importieren."}
       </p>
       {native && <button className="button" onClick={requestNativeHealth}><Heart size={18} /> Apple Health freigeben</button>}
+      {sandboxMode() && <button className="button secondary" onClick={() => {
+        const date = dateKey();
+        const result = parseHealthXML(nativeHealthXML({ records: [
+          { type: "HKQuantityTypeIdentifierStepCount", sourceName: "Test · Apple Watch", unit: "count", value: "7200", startDate: `${date}T08:00:00Z`, endDate: `${date}T09:00:00Z` },
+          { type: "HKQuantityTypeIdentifierHeartRateVariabilitySDNN", sourceName: "Test · Apple Watch", unit: "ms", value: "45", startDate: `${date}T07:00:00Z` },
+          { type: "HKCategoryTypeIdentifierSleepAnalysis", sourceName: "Test · Apple Watch", value: "HKCategoryValueSleepAnalysisAsleepCore", startDate: `${date}T01:00:00Z`, endDate: `${date}T07:00:00Z` },
+        ], workouts: [] })); setParsed(result); setSource(result.sources[0]); setError("");
+      }}>Apple-Health-Testdaten laden</button>}
       <label className="upload-label">
         <Upload size={25} />
         <b>{busy ? "Datei wird geprüft …" : "Health-Export importieren"}</b>
@@ -572,13 +581,7 @@ export function Connections() {
           />
         ))}
       </div>
-      <SectionTitle>Weitere Verbindungen</SectionTitle>
-      <div className="stat-line">
-        <span>
-          <Watch size={15} /> Garmin / weitere Geräte
-        </span>
-        <b>Noch nicht angebunden</b>
-      </div>
+      <IntegrationConnections />
       <SectionTitle>Gespeicherte Quellen</SectionTitle>
       <div>
         {[

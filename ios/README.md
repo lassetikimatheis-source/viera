@@ -23,6 +23,7 @@ to the existing source-selection and import preview. Nothing is saved until the
 user confirms. No Health write permissions or background delivery are requested.
 Denied read access is intentionally indistinguishable from no data in HealthKit.
 Imports over 10,000 samples per type fail explicitly instead of silently truncating.
+Pulse uses a 12-hour window; other supported types use 30 days.
 SDNN is supported; RMSSD native querying is not implemented yet. Both methods remain
 distinct in file imports. Measurements are not converted into a claimed stress score.
 
@@ -37,7 +38,10 @@ prototype as medically validated or fully synchronized.
 Included: existing dashboard, nutrition/manual food/barcode flows, sleep imports,
 training timer plus plans/logs/progress, supplements, optional cycle diary, profile,
 backups and preferences. AI requires AI_GATEWAY_API_KEY and VYRA_AI_MODEL on the server.
-Coach accounts, secure cross-user sharing, Garmin/WHOOP/Strava OAuth, push delivery,
+WHOOP and Strava OAuth routes and native authentication are implemented; they require
+registered developer credentials to connect real accounts. An isolated test diary
+is available without credentials. See `../docs/INTEGRATIONS.md`.
+Coach accounts, secure cross-user sharing, direct Garmin OAuth, push delivery,
 payments, automatic live training detection and validated stress/readiness are not
 implemented. A simulator build does not validate real wearable readings.
 

@@ -1,8 +1,9 @@
 import SwiftUI
 import WebKit
+import AuthenticationServices
 
 @MainActor
-final class WebModel: ObservableObject {
+final class WebModel: NSObject, ObservableObject {
     @Published var loading = true
     @Published var error: String?
     @Published var showHealth = false
@@ -11,7 +12,48 @@ final class WebModel: ObservableObject {
     @Published var colorScheme: ColorScheme?
     weak var webView: WKWebView?
     let health = HealthReader()
-    static let home = URL(string: "https://viera-matheis.vercel.app/?native=ios")!
+    static let home: URL = {
+        var url = URLComponents(string: "https://viera-matheis.vercel.app/?native=ios")!
+        if ProcessInfo.processInfo.arguments.contains("--test-connections") {
+            url.queryItems?.append(URLQueryItem(name: "sandbox", value: "1"))
+            url.fragment = "profile/connections"
+        }
+        return url.url!
+    }()
+    private var authentication: ASWebAuthenticationSession?
+
+    func authorize(provider: String, url: URL) {
+        let expected = provider == "whoop"
+            ? "https://api.prod.whoop.com/oauth/oauth2/auth"
+            : "https://www.strava.com/oauth/mobile/authorize"
+        guard ["whoop", "strava"].contains(provider), authentication == nil,
+              url.scheme == "https", "\(url.scheme!)://\(url.host ?? "")\(url.path)" == expected,
+              let redirect = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "redirect_uri" })?.value,
+              redirect == "vyra://\(Self.home.host!)/oauth/\(provider)" else { return }
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "vyra") { [weak self] callback, error in
+            Task { @MainActor in
+                guard let self else { return }
+                self.authentication = nil
+                var result = ["provider": provider]
+                if let callback, callback.host == Self.home.host, callback.path == "/oauth/\(provider)", callback.scheme == "vyra", error == nil {
+                    let items = URLComponents(url: callback, resolvingAgainstBaseURL: false)?.queryItems ?? []
+                    for name in ["code", "state", "error"] { result[name] = items.first(where: { $0.name == name })?.value }
+                } else { result["error"] = "cancelled" }
+                _ = try? await self.webView?.callAsyncJavaScript(
+                    "window.dispatchEvent(new CustomEvent('vyra:oauth-result', {detail: result}));",
+                    arguments: ["result": result], in: nil, contentWorld: .page)
+            }
+        }
+        session.presentationContextProvider = self
+        session.prefersEphemeralWebBrowserSession = true
+        authentication = session
+        if !session.start() {
+            authentication = nil
+            Task { _ = try? await webView?.callAsyncJavaScript(
+                "window.dispatchEvent(new CustomEvent('vyra:oauth-result', {detail: {provider, error: 'unavailable'}}));",
+                arguments: ["provider": provider], in: nil, contentWorld: .page) }
+        }
+    }
 
     func reload() {
         error = nil
@@ -39,6 +81,12 @@ final class WebModel: ObservableObject {
     }
 }
 
+extension WebModel: ASWebAuthenticationPresentationContextProviding {
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        webView?.window ?? ASPresentationAnchor()
+    }
+}
+
 struct VYRAWebView: UIViewRepresentable {
     @ObservedObject var model: WebModel
     func makeCoordinator() -> Coordinator { Coordinator(model) }
@@ -47,6 +95,7 @@ struct VYRAWebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()
         config.userContentController.add(context.coordinator, name: "vyraHealth")
+        config.userContentController.addUserScript(WKUserScript(source: "window.vyraNativeOAuth = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         config.allowsInlineMediaPlayback = true
         let view = WKWebView(frame: .zero, configuration: config)
         view.navigationDelegate = context.coordinator
@@ -82,6 +131,10 @@ struct VYRAWebView: UIViewRepresentable {
             if body["action"] == "theme" {
                 if body["theme"] == "dark" { model.colorScheme = .dark }
                 else if body["theme"] == "light" { model.colorScheme = .light }
+                return
+            }
+            if body["action"] == "oauth", let provider = body["provider"], let raw = body["url"], let url = URL(string: raw) {
+                model.authorize(provider: provider, url: url)
                 return
             }
             guard body["action"] == "import" else { return }

@@ -30,6 +30,7 @@ import { NutritionScreen } from "@/components/vyra/nutrition";
 import { WellbeingScreen } from "@/components/vyra/wellbeing";
 import { ProfileScreen } from "@/components/vyra/profile";
 import { nativeHealthAvailable } from "@/lib/native-health";
+import { sandboxMode } from "@/lib/sandbox";
 import { TrainingScreen } from "@/components/vyra/training";
 const tabs = [
   { id: "home", label: "Home", icon: House },
@@ -124,6 +125,7 @@ function App() {
               </button>
             </div>
           </header>
+          {sandboxMode() && <div className="test-mode-banner"><b>Testmodus</b><span>Getrenntes Tagebuch · Beispieldaten</span></div>}
           {data.training && route.detail !== "training" && (
             <button
               className="active-training-banner"

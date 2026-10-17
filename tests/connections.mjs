@@ -1,0 +1,36 @@
+import { chromium } from "@playwright/test";
+import assert from "node:assert/strict";
+const browser = await chromium.launch();
+try {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = []; page.on("pageerror", error => errors.push(error.message));
+  const base = process.env.BASE_URL || "http://localhost:3021";
+  await page.goto(base + "/#profile/connections");
+  await page.getByRole("button", { name: "Testmodus öffnen" }).click();
+  await page.getByText("Testmodus", { exact: true }).waitFor();
+  const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem("vyra-test-v1")));
+  await page.getByRole("button", { name: "WHOOP-Testdaten laden" }).click();
+  await page.getByRole("button", { name: "Ins Testtagebuch übernehmen" }).click();
+  assert.equal((await saved()).samples.length, 3);
+  assert.equal((await saved()).physiology.length, 1);
+  await page.getByRole("button", { name: "WHOOP-Testdaten laden" }).click();
+  await page.getByRole("button", { name: "Ins Testtagebuch übernehmen" }).click();
+  assert.equal((await saved()).samples.length, 3);
+  await page.getByRole("button", { name: "Strava-Testdaten laden" }).click();
+  await page.getByText(/möglicherweise doppelte Trainings überspringen/).waitFor();
+  await page.getByRole("button", { name: "Ins Testtagebuch übernehmen" }).click();
+  assert.equal((await saved()).samples.filter(s => s.metric === "workout").length, 1);
+  await page.getByRole("button", { name: "Apple-Health-Testdaten laden" }).click();
+  await page.getByRole("button", { name: "Ausgewählte Daten importieren" }).click();
+  assert((await saved()).samples.some(s => s.source === "Test · Apple Watch"));
+  assert.equal(await page.evaluate(() => localStorage.getItem("vyra-personal-v2")), null);
+  await page.screenshot({ path: "/tmp/vyra-connections-test.png" });
+  await page.getByRole("button", { name: "Zum persönlichen Tagebuch" }).click();
+  assert.equal(await page.getByText("Testmodus", { exact: true }).count(), 0);
+  const csrf = await page.request.post(base + "/api/integrations/whoop/start", { headers: { Origin: "https://other.example" }, data: {} });
+  assert.equal(csrf.status(), 403);
+  const setup = await page.request.post(base + "/api/integrations/whoop/start", { headers: { Origin: base }, data: {} });
+  assert.equal(setup.status(), 503);
+  assert.deepEqual(errors, []);
+  console.log("PASS: isolated test diary, WHOOP/Strava/Apple imports, deduplication, no personal-data changes, OAuth CSRF and missing-configuration errors");
+} finally { await browser.close(); }

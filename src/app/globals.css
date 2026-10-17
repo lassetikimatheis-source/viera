@@ -70,7 +70,8 @@
   font-size: 10px;
   text-align: center;
   color: var(--muted);
-  margin-top: -8px;
+  margin: 14px 0 0;
+  line-height: 1.5;
 }
 .training-entry {
   display: flex;
@@ -2036,6 +2037,18 @@ svg {
 .dashboard-customize { display: flex; justify-content: flex-end; }
 .widget-setting { display: flex; align-items: center; gap: 3px; border-bottom: 1px solid var(--line); }
 .widget-setting .toggle-row { flex: 1; min-width: 0; }
+.test-mode-banner { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 20px; font-size: 10px; background: var(--lavender); color: var(--ink); }
+.test-mode-banner span { text-align: right; }
+.integration-row { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.integration-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.integration-heading h3 { font-size: 17px; }
+.integration-heading .source { margin: 0; text-align: right; }
+.integration-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.integration-row .button { margin: 8px 0; }
+.import-preview { max-height: 300px; overflow: auto; margin: 16px 0; }
+.import-preview .stat-line { gap: 12px; font-size: 12px; }
+.import-preview .stat-line span { min-width: 0; overflow-wrap: anywhere; }
+.import-preview .stat-line b { flex-shrink: 0; }
 .toggle-track { pointer-events: none; }
 .widget-setting .icon-button { flex: 0 0 32px; width: 32px; }
 .dashboard-v3 > #training { margin-bottom: 20px; }

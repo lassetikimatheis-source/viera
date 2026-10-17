@@ -1,18 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-<key>CFBundleDisplayName</key><string>VYRA</string>
-<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
-<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-<key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
-<key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>1.0</string>
-<key>CFBundleVersion</key><string>1</string>
-<key>UILaunchScreen</key><dict/>
-<key>UIApplicationSceneManifest</key><dict><key>UIApplicationSupportsMultipleScenes</key><false/></dict>
-<key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
-<key>NSHealthShareUsageDescription</key><string>VYRA liest nur von dir freigegebene Gesundheitsdaten, damit du Schlaf, Aktivität, Puls und Training gemeinsam ansehen kannst.</string>
-<key>NSCameraUsageDescription</key><string>Die Kamera wird auf deinen Wunsch für Produkt-Barcodes und Mahlzeitenfotos verwendet.</string>
-<key>NSPhotoLibraryUsageDescription</key><string>Wähle ein Profilbild oder ein Mahlzeitenfoto aus.</string>
-<key>ITSAppUsesNonExemptEncryption</key><false/>
-</dict></plist>
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array><dict><key>CFBundleURLName</key><string>de.vyra.oauth</string><key>CFBundleURLSchemes</key><array><string>vyra</string></array></dict></array>
+	<key>CFBundleDisplayName</key>
+	<string>VYRA</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Die Kamera wird auf deinen Wunsch für Produkt-Barcodes und Mahlzeitenfotos verwendet.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>VYRA liest nur von dir freigegebene Gesundheitsdaten, damit du Schlaf, Aktivität, Puls und Training gemeinsam ansehen kannst.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Wähle ein Profilbild oder ein Mahlzeitenfoto aus.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
+</plist>

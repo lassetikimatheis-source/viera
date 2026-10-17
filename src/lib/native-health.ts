@@ -1,8 +1,9 @@
 export type NativeHealthPayload = { records: Record<string, string>[]; workouts: Record<string, string>[] };
 declare global {
   interface Window {
-    webkit?: { messageHandlers?: { vyraHealth?: { postMessage: (message: { action: string; theme?: string }) => void } } };
+    webkit?: { messageHandlers?: { vyraHealth?: { postMessage: (message: { action: string; theme?: string; provider?: string; url?: string }) => void } } };
     vyraNativeHealthReady?: boolean;
+    vyraNativeOAuth?: boolean;
   }
 }
 export function nativeHealthAvailable() {
