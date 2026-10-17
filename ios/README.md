@@ -7,11 +7,16 @@ No developer account, signing certificate, or provisioning profile is committed.
 
 ## Architecture
 
-SwiftUI hosts the existing application in a persistent WKWebView. Its only in-app
+The app starts with a native SwiftUI health dashboard, training history and
+connection settings. WHOOP uses ASWebAuthenticationSession, Keychain tokens and
+direct native API requests. See [WHOOP-SETUP.md](WHOOP-SETUP.md) for setup,
+security boundaries and the isolated VYRA-Test scheme.
+
+The existing application remains under "Weitere Bereiche" in a persistent WKWebView. Its only in-app
 web origin is https://viera-matheis.vercel.app. This preserves the Next.js API
 routes for food search and optional AI without embedding server secrets in iOS.
 The web UI detects the native bridge and removes the simulated device chrome.
-This is a hybrid app, not a complete SwiftUI rewrite; cold starts require internet.
+This remains a hybrid app, not a complete SwiftUI rewrite; the legacy web areas require internet on cold starts.
 Web updates are deployed independently to Vercel. Safari data is not automatically
 shared with this app's WKWebView storage. Backups can be exported/imported manually.
 
@@ -27,7 +32,9 @@ Pulse uses a 12-hour window; other supported types use 30 days.
 SDNN is supported; RMSSD native querying is not implemented yet. Both methods remain
 distinct in file imports. Measurements are not converted into a claimed stress score.
 
-Health data is stored in the app's web storage, not a clinical or audited encrypted
+The new native import stores data locally using complete iOS file protection,
+separately from the legacy web diary. The existing web-area import remains
+unchanged. Its health data is stored in web storage, not a clinical or audited encrypted
 database. Existing AI sharing remains an explicit separate action. Before App Store
 distribution, review privacy disclosures, retention, authentication, storage protection,
 HealthKit policy compliance, app icons, and real-device behavior. Do not market this

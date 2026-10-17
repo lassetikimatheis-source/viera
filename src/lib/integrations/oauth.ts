@@ -11,7 +11,7 @@ function settings(provider: Provider) {
     auth: oauth.ClientSecretPost(process.env[`${provider.toUpperCase()}_CLIENT_SECRET`]!),
   };
 }
-export async function beginAuthorization(provider: Provider, native: boolean) {
+export async function beginAuthorization(provider: Provider, native: boolean, scopes: readonly string[] = providerConfig[provider].scopes) {
   const { as, client } = settings(provider);
   const state = oauth.generateRandomState(), verifier = oauth.generateRandomCodeVerifier();
   const redirect = native ? `vyra://${new URL(appOrigin()).hostname}/oauth/${provider}` : `${appOrigin()}/api/integrations/${provider}/callback`;
@@ -19,7 +19,7 @@ export async function beginAuthorization(provider: Provider, native: boolean) {
   const url = new URL(as.authorization_endpoint!);
   if (native && provider === "strava") url.pathname = "/oauth/mobile/authorize";
   url.search = new URLSearchParams({ client_id: client.client_id, redirect_uri: redirect, response_type: "code", state,
-    scope: providerConfig[provider].scopes.join(provider === "strava" ? "," : " "),
+    scope: scopes.join(provider === "strava" ? "," : " "),
     code_challenge: await oauth.calculatePKCECodeChallenge(verifier), code_challenge_method: "S256" }).toString();
   return { flow, url: url.href };
 }

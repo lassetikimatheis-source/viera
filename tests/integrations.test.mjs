@@ -5,12 +5,31 @@ import { seal, unseal, cookieName, readConnection } from "../src/lib/integration
 import { loadProviderData } from "../src/lib/integrations/client.ts";
 import { normalizeProvider, mergeProviderImport, likelyDuplicate } from "../src/lib/integrations/data.ts";
 import { initialState, readState } from "../src/lib/vyra-data.ts";
+import { nativeWHOOPFlow, nativeWHOOPScopes, prepareNativeWHOOP } from "../src/lib/integrations/native-whoop.ts";
 process.env.VYRA_APP_URL = "http://localhost:3021";
 process.env.VYRA_CONNECTION_SECRET = "local-test-key-only-never-use-in-production";
 process.env.WHOOP_CLIENT_ID = "test-client";
 process.env.WHOOP_CLIENT_SECRET = "test-secret";
 process.env.STRAVA_CLIENT_ID = "12345";
 process.env.STRAVA_CLIENT_SECRET = "test-secret";
+
+test("Native WHOOP transaction binds scope, state, redirect, expiration and encryption context", async () => {
+  const prepared = await prepareNativeWHOOP();
+  const url = new URL(prepared.authorizationURL);
+  assert.equal(prepared.redirectURI, "vyra://localhost/oauth/whoop");
+  assert.deepEqual(url.searchParams.get("scope").split(" "), [...nativeWHOOPScopes]);
+  assert.equal(url.searchParams.get("code_challenge_method"), "S256");
+  const flow = nativeWHOOPFlow(prepared.transaction, prepared.state);
+  assert(flow?.verifier);
+  assert.equal(nativeWHOOPFlow(prepared.transaction, "wrong"), null);
+  assert.equal(nativeWHOOPFlow(prepared.transaction, prepared.state, Date.now() + 11 * 60000), null);
+  assert.equal(nativeWHOOPFlow(prepared.transaction + "tampered", prepared.state), null);
+  assert.equal(nativeWHOOPFlow(seal(flow, "other-context"), prepared.state), null);
+  assert.equal(nativeWHOOPFlow(seal({ ...flow, redirect: "vyra://other/oauth/whoop" }, "vyra-native-whoop-v1"), prepared.state), null);
+  assert.equal(nativeWHOOPFlow(seal({ ...flow, native: false }, "vyra-native-whoop-v1"), prepared.state), null);
+  assert(!prepared.authorizationURL.includes("test-secret"));
+  assert(!JSON.stringify(prepared).includes(flow.verifier));
+});
 
 test("OAuth binds state, redirect and PKCE; token responses never enter a user-facing URL", async () => {
   const { flow, url } = await beginAuthorization("whoop", false);

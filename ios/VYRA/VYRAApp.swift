@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct VYRAApp: App {
     var body: some Scene {
-        WindowGroup { ContentView() }
+        WindowGroup { NativeRootView() }
     }
 }
 
