@@ -1,6 +1,25 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { stressEvidence } from "../src/lib/stress-data.ts";
+import { validPlan, trainingSummary, personalRecords, weekStart } from "../src/lib/training.ts";
+
+test("Training plans and preferences validate, completed records count once", () => {
+  const state = initialState(false);
+  const plan = { id: "plan", date: "2026-10-17", title: "Strength", minutes: 45, category: "Krafttraining", notes: "", exercises: [{ id: "e", name: "Squat", sets: 3, reps: 8, kg: 50 }] };
+  assert(validPlan(plan));
+  assert(!validPlan({ ...plan, date: "2026-02-31" }));
+  assert(!validPlan({ ...plan, exercises: [{ ...plan.exercises[0], kg: -1 }] }));
+  state.trainingPlans = [plan];
+  state.samples = [{ id: "w", date: plan.date, metric: "workout", source: "Manuell", value: 45, workout: { ...plan, planId: plan.id } }];
+  const summary = trainingSummary(state.samples, "2026-10-12", "2026-10-18");
+  assert.equal(summary.count, 1);
+  assert.equal(summary.volume, 1200);
+  assert.equal(personalRecords(state.samples)[0].kg, 50);
+  assert.equal(weekStart("2026-10-18"), "2026-10-12");
+  assert.equal(readState(JSON.stringify(state)).trainingPlans.length, 1);
+  assert.throws(() => readState(JSON.stringify({ ...state, dashboard: { order: [], hidden: [] } })));
+  assert.throws(() => readState(JSON.stringify({ ...state, notifications: "spam" })));
+});
 import {
   initialState,
   readState,

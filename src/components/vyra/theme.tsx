@@ -18,6 +18,7 @@ export function ThemeControl() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
+    window.webkit?.messageHandlers?.vyraHealth?.postMessage({ action: "theme", theme });
   }, [theme]);
   return (
     <IconButton

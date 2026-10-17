@@ -48,16 +48,11 @@ try {
   assert.equal(await page.locator(".balance-part").count(), 3);
   await page.screenshot({ path: `${out}/balance-dark.png` });
   await home();
-  await page.getByRole("button", { name: /Wie fühlst du dich/ }).click();
-  await page
-    .getByRole("slider", { name: "Stresslevel", exact: true })
-    .fill("7");
-  await page.getByRole("button", { name: "Selbstcheck speichern" }).click();
-  assert(Object.values((await saved()).stress).includes(7));
+  assert.equal(await page.getByRole("button", { name: /Wie fühlst du dich/ }).count(), 0);
   await page.getByRole("button", { name: "Vorheriger Tag" }).click();
   assert(
     await page
-      .getByRole("button", { name: /Wie fühlst du dich.*Eintragen/ })
+      .getByRole("button", { name: /Körperlicher Stress/ })
       .count(),
   );
   await page.getByRole("button", { name: /Training starten.*Manuell/ }).click();

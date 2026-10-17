@@ -1,0 +1,57 @@
+import { chromium } from "@playwright/test";
+import assert from "node:assert/strict";
+const browser = await chromium.launch();
+try {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await page.addInitScript(() => { window.webkit = { messageHandlers: { vyraHealth: { postMessage: (message) => { if (message.action === "import") window.healthRequested = true; } } } }; });
+  const errors = [];
+  page.on("pageerror", e => errors.push(e.message));
+  await page.goto(process.env.BASE_URL || "http://localhost:3021");
+  const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem("vyra-personal-v2")));
+  const tab = name => page.getByRole("navigation").getByRole("button", { name, exact: true }).click();
+  assert(await page.locator(".native-ios").count());
+  assert.equal(await page.getByRole("button", { name: /Wie fühlst du dich/ }).count(), 0);
+  await page.getByRole("button", { name: "Dashboard anpassen" }).click();
+  await page.getByRole("switch", { name: "Stress & Messdaten" }).uncheck();
+  await page.getByRole("button", { name: "Training nach oben", exact: true }).click();
+  await page.getByRole("button", { name: "Schließen", exact: true }).click();
+  assert.equal(await page.locator("#stress").count(), 0);
+  await page.reload();
+  assert.equal((await saved()).dashboard.order[0], "training");
+  await tab("Training");
+  await page.getByRole("button", { name: "Einheit planen" }).click();
+  await page.getByLabel("Trainingstitel").fill("Oberkörper Test");
+  await page.getByRole("button", { name: "Übung hinzufügen" }).click();
+  await page.getByLabel("Übungsname").fill("Bankdrücken");
+  await page.getByLabel("kg", { exact: true }).fill("40");
+  await page.getByRole("button", { name: "Plan speichern" }).click();
+  assert.equal((await saved()).trainingPlans.length, 1);
+  await page.getByRole("button", { name: /Als absolviert erfassen/ }).click();
+  await page.getByRole("button", { name: "Protokoll speichern" }).click();
+  await page.getByText("Abgeschlossen", { exact: true }).waitFor();
+  const planId = (await saved()).trainingPlans[0].id;
+  assert.equal((await saved()).samples.filter(s => s.workout?.planId === planId).length, 1);
+  await page.getByRole("button", { name: "Fortschritt", exact: true }).click();
+  await page.getByText("40 kg", { exact: true }).waitFor();
+  await page.screenshot({ path: "/tmp/vyra-ios-progress.png" });
+  await page.getByRole("button", { name: "Verlauf", exact: true }).click();
+  await page.getByRole("button", { name: /Oberkörper Test/ }).click();
+  await page.getByRole("button", { name: "Protokoll bearbeiten" }).click();
+  await page.getByLabel("Dauer (Minuten)").fill("60");
+  await page.getByRole("button", { name: "Protokoll speichern" }).click();
+  assert.equal((await saved()).samples.find(s => s.workout?.planId === planId).value, 60);
+  await tab("Profil");
+  await page.getByRole("button", { name: /Health-Verbindungen/ }).click();
+  await page.getByRole("button", { name: "Apple Health freigeben" }).click();
+  assert(await page.evaluate(() => window.healthRequested));
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("vyra:native-health", { detail: { records: [{ type: "HKQuantityTypeIdentifierHeartRateVariabilitySDNN", sourceName: "Native Test Watch", value: "45", unit: "ms", startDate: "2026-10-16T12:00:00+02:00" }], workouts: [] } })));
+  await page.getByRole("button", { name: "Ausgewählte Daten importieren" }).click();
+  assert.equal((await saved()).physiology[0].value, 45);
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    await tab("Training");
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  }
+  assert.deepEqual(errors, []);
+  console.log("PASS: native mode, customization persistence, planning, single completion, exercise PR, editing, native bridge import and responsive layout");
+} finally { await browser.close(); }

@@ -141,13 +141,13 @@ export function parseHealthXML(text: string): {
         ...(g.stages ? { stages: g.stages } : {}),
       };
     });
-  xml.querySelectorAll("Workout").forEach((workout, i) => {
+  xml.querySelectorAll("Workout").forEach((workout) => {
     const start = workout.getAttribute("startDate") || "";
     let value = Number(workout.getAttribute("duration"));
     if (workout.getAttribute("durationUnit") === "s") value /= 60;
     if (!Number.isFinite(value) || value <= 0) return;
     samples.push({
-      id: `health:workout:${start}:${i}`,
+      id: `health:workout:${start}:${workout.getAttribute("sourceName") || "Apple Health"}:${workout.getAttribute("workoutActivityType") || "Training"}`,
       metric: "workout",
       date: start.slice(0, 10),
       value,

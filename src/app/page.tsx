@@ -29,9 +29,11 @@ import {
 import { NutritionScreen } from "@/components/vyra/nutrition";
 import { WellbeingScreen } from "@/components/vyra/wellbeing";
 import { ProfileScreen } from "@/components/vyra/profile";
+import { nativeHealthAvailable } from "@/lib/native-health";
+import { TrainingScreen } from "@/components/vyra/training";
 const tabs = [
   { id: "home", label: "Home", icon: House },
-  { id: "health", label: "Health", icon: Activity },
+  { id: "health", label: "Training", icon: Activity },
   { id: "nutrition", label: "Ernährung", icon: Utensils },
   { id: "wellbeing", label: "Gesundheit", icon: Heart },
   { id: "profile", label: "Profil", icon: UserRound },
@@ -61,13 +63,14 @@ function deviceScale() {
 }
 function App() {
   const scale = useSyncExternalStore(subscribeViewport, deviceScale, () => 1);
+  const native = useSyncExternalStore(() => () => {}, nativeHealthAvailable, () => false);
   const { route, go, data } = useVyra();
   const scroll = useRef<HTMLDivElement>(null);
   useEffect(() => {
     scroll.current?.scrollTo(0, 0);
   }, [route]);
   return (
-    <div className="stage">
+    <div className={`stage${native ? " native-ios" : ""}`}>
       <aside className="desktop-brand">
         <img src="/icon.svg" width="36" height="36" alt="" />
         <b>VYRA</b>
@@ -144,10 +147,10 @@ function App() {
               ) : route.tab === "home" ? (
                 <Dashboard />
               ) : route.tab === "health" ? (
-                route.detail ? (
+                route.detail === "metrics" ? <HealthScreen /> : route.detail ? (
                   <HealthDetail />
                 ) : (
-                  <HealthScreen />
+                  <TrainingScreen />
                 )
               ) : route.tab === "nutrition" ? (
                 <NutritionScreen />

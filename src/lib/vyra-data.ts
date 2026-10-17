@@ -1,3 +1,5 @@
+import { validPlan, validWorkout, type TrainingPlan, type WorkoutDetails } from "./training.ts";
+import { notificationModes, validDashboard, type DashboardPreferences, type NotificationMode } from "./preferences.ts";
 export type Tab = "home" | "health" | "nutrition" | "wellbeing" | "profile";
 export type Metric =
   "steps" | "sleep" | "heart" | "active" | "weight" | "workout";
@@ -19,6 +21,7 @@ export type Entry = Food & {
   grams: number;
 };
 export type Sample = {
+  workout?: WorkoutDetails;
   id: string;
   metric: Metric;
   date: string;
@@ -56,6 +59,9 @@ export type CycleEntry = {
   note: string;
 };
 export type State = {
+  trainingPlans?: TrainingPlan[];
+  dashboard?: DashboardPreferences;
+  notifications?: NotificationMode;
   physiology?: PhysiologyReading[];
   sleepGoal?: number;
   trainingGoal?: number;
@@ -330,6 +336,9 @@ export function readState(raw: string): State {
     !Number.isNaN(Date.parse(v));
   const timestamp = (v: unknown) => n(v, 0, 8640000000000000);
   if (
+    (parsed.trainingPlans !== undefined && (!Array.isArray(parsed.trainingPlans) || !parsed.trainingPlans.every(validPlan))) ||
+    (parsed.dashboard !== undefined && !validDashboard(parsed.dashboard)) ||
+    (parsed.notifications !== undefined && !notificationModes.includes(parsed.notifications)) ||
     (parsed.physiology !== undefined &&
       (!Array.isArray(parsed.physiology) || !parsed.physiology.every(validPhysiology))) ||
     (parsed.sleepGoal !== undefined && !n(parsed.sleepGoal, 4, 12)) ||
@@ -402,6 +411,7 @@ export function readState(raw: string): State {
         n(v.value) &&
         s(v.source) &&
         (!v.title || s(v.title)) &&
+        (v.workout === undefined || (v.metric === "workout" && validWorkout(v.workout))) &&
         (v.startedAt === undefined || timestamp(v.startedAt)) &&
         (v.endedAt === undefined || timestamp(v.endedAt)) &&
         (v.effort === undefined || n(v.effort, 1, 10)) &&

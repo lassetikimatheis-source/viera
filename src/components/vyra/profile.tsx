@@ -2,6 +2,7 @@
 import { useState } from "react";
 import {
   CreditCard,
+  Bell,
   Download,
   Link2,
   Settings2,
@@ -23,6 +24,7 @@ import {
   uid,
 } from "@/lib/vyra-data";
 import { useVyra } from "./store";
+import { type NotificationMode } from "@/lib/preferences";
 import {
   BackTitle,
   Empty,
@@ -51,6 +53,13 @@ export function ProfileScreen() {
   if (route.detail === "edit") return <EditProfile />;
   if (route.detail === "goals") return <Goals />;
   if (route.detail === "friends") return <Friends />;
+  if (route.detail === "notifications") return <>
+    <BackTitle title="Hinweise & Empfehlungen" />
+    <Field label="Gewünschte Häufigkeit"><select value={data.notifications || "on-demand"} onChange={e => setData(s => ({ ...s, notifications: e.target.value as NotificationMode }))}>
+      <option value="on-demand">Nur auf Anfrage</option><option value="important">Nur wichtige Hinweise</option><option value="daily">Tägliche Zusammenfassung</option><option value="weekly">Wöchentliche Zusammenfassung</option><option value="off">Ausgeschaltet</option>
+    </select></Field>
+    <p className="notice">Deine Präferenz wird lokal gespeichert. Push-Nachrichten und geplante Zusammenfassungen sind noch nicht eingerichtet. VYRA sendet derzeit keine automatischen Hinweise.</p>
+  </>;
   if (route.detail === "payment")
     return (
       <>
@@ -205,6 +214,7 @@ export function ProfileScreen() {
         </button>
       </div>
       <div className="rows">
+        <Row icon={Bell} title="Hinweise & Empfehlungen" text="Standard: nur auf Anfrage" onClick={() => go("profile", "notifications")} />
         <Row
           icon={UserRound}
           title="Persönliche Angaben"

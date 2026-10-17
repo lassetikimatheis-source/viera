@@ -32,7 +32,7 @@ try {
     await page.setViewportSize(viewport);
     for (const [tab, key] of [
       ["Home", "home"],
-      ["Health", "health"],
+      ["Training", "health"],
       ["Ernährung", "nutrition"],
       ["Gesundheit", "wellbeing"],
       ["Profil", "profile"],
@@ -111,7 +111,8 @@ try {
   await page.getByLabel("Symptome").fill("Test");
   await page.getByRole("button", { name: "Eintrag speichern" }).click();
   assert.equal((await saved()).cycle.entries.length, 1);
-  await clickTab("Health");
+  await clickTab("Training");
+  await page.getByRole("button", { name: /Alle Health-Daten/ }).click();
   await page.getByRole("button", { name: /Schritte.*Schritte/ }).click();
   await page.getByRole("button", { name: "Wert eintragen" }).click();
   await page.getByLabel("Wert (Schritte)").fill("100");

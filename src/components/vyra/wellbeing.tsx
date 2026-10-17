@@ -19,6 +19,7 @@ import {
   totals,
 } from "@/lib/vyra-data";
 import { useVyra } from "./store";
+import { trainingRecords, trainingSummary } from "@/lib/training";
 import {
   BackTitle,
   Empty,
@@ -38,6 +39,7 @@ export function WellbeingScreen() {
   return (
     <>
       <Title title="Deine Gesundheit" eyebrow="DEIN PERSÖNLICHER BLICK" />
+      <Insights />
       <div className="rows">
         <Row
           icon={FileChartColumn}
@@ -88,6 +90,21 @@ export function WellbeingScreen() {
       </div>
     </>
   );
+}
+
+function Insights() {
+  const { data, day, go } = useVyra();
+  const records = trainingRecords(data).filter(r => r.source !== "Beispieldaten");
+  const current = trainingSummary(records, shiftDate(day, -6), day);
+  const previous = trainingSummary(records, shiftDate(day, -13), shiftDate(day, -7));
+  const sleeps = Array.from({ length: 7 }, (_, i) => metricValue(data.samples.filter(s => s.source !== "Beispieldaten"), "sleep", shiftDate(day, -i - 1))).filter((v): v is number => v !== null);
+  const today = metricValue(data.samples.filter(s => s.source !== "Beispieldaten"), "sleep", day);
+  const baseline = sleeps.length >= 3 ? sleeps.reduce((sum, v) => sum + v, 0) / sleeps.length : null;
+  return <section className="insights-section">
+    <SectionTitle>Deine Insights</SectionTitle><p className="source">Regelbasierte Auswertung · keine KI oder medizinische Bewertung</p>
+    <div className="notice"><b>{current.count} Trainings in den letzten 7 Tagen erfasst</b><p>Im vorherigen Zeitraum: {previous.count}. Verglichen werden Einträge, nicht deine gesamte tatsächliche Aktivität.</p><button className="text-button" onClick={() => go("health")}>Trainingsplan ansehen</button></div>
+    {today !== null && baseline !== null ? <div className="notice"><b>Schlaf im Vergleich</b><p>{number(today, 1)} Stunden, zuvor im Schnitt {number(baseline, 1)} Stunden über {sleeps.length} erfasste Nächte. {today < baseline ? "Wenn du dich weniger erholt fühlst, könntest du heute eine leichtere Einheit einplanen." : "Beobachte zusätzlich, wie erholt du dich heute fühlst."}</p><button className="text-button" onClick={() => go("health", "sleep")}>Schlaf ansehen</button></div> : <p className="note">Für einen Schlafvergleich fehlen der heutige Wert oder mindestens drei vorherige Nächte mit eigenen Daten.</p>}
+  </section>;
 }
 
 function Cycle() {

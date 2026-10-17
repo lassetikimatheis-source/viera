@@ -41,7 +41,7 @@ try {
       assert(Math.abs(box.height / box.width - 844 / 390) < 0.005);
       assert(box.y >= 0 && box.y + box.height <= height + 1);
     }
-    for (const tab of ["Home", "Health", "Ernährung", "Gesundheit", "Profil"]) {
+    for (const tab of ["Home", "Training", "Ernährung", "Gesundheit", "Profil"]) {
       await page
         .getByRole("navigation")
         .getByRole("button", { name: tab, exact: true })
@@ -89,7 +89,7 @@ try {
     .getByRole("button", { name: "Home", exact: true })
     .click();
   await page.screenshot({ path: `${out}/phone-light-short.png` });
-  await page.getByRole("button", { name: /Dein Stresslevel/ }).click();
+  await page.getByRole("button", { name: /Körperlicher Stress/ }).click();
   await page.getByRole("dialog").waitFor();
   const dialog = await page.getByRole("dialog").boundingBox();
   assert(

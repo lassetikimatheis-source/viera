@@ -135,17 +135,14 @@ export function DashboardRings() {
   );
 }
 export function StressBar() {
-  const { data, day, setData, go } = useVyra();
-  const [open, setOpen] = useState(false),
-    [details, setDetails] = useState(false),
-    [now, setNow] = useState(() => Date.now()),
-    [draft, setDraft] = useState(5);
+  const { data, day, go } = useVyra();
+  const [details, setDetails] = useState(false),
+    [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(timer);
   }, []);
   const evidence = stressEvidence(data, day, now);
-  const value = data.stress?.[day];
   return (
     <section className="stress-section">
       <button className="stress-heading" onClick={() => setDetails(true)}>
@@ -188,91 +185,6 @@ export function StressBar() {
         <button className="button secondary" onClick={() => { setDetails(false); go("health", "connections"); }}><Link2 size={16} /> Health-Daten importieren</button>
         <p className="note">Garmin-Herstellerwerte sind noch nicht angebunden. Apple Health benötigt für automatische Synchronisierung eine native iPhone-Anbindung.</p>
       </Sheet>}
-      <button
-        className="stress-heading"
-        onClick={() => {
-          setDraft(value ?? 5);
-          setOpen(true);
-        }}
-      >
-        <span>
-          <b>Wie fühlst du dich?</b>
-          <small>Persönlicher Selbstcheck</small>
-        </span>
-        <strong>{value === undefined ? "Eintragen" : `${value}/10`}</strong>
-        <ChevronRight size={16} />
-      </button>
-      <div
-        className="stress-track"
-        role={value === undefined ? "group" : "meter"}
-        aria-label={
-          value === undefined
-            ? "Stress: noch kein Selbstcheck"
-            : "Stress-Selbstcheck"
-        }
-        aria-valuemin={0}
-        aria-valuemax={10}
-        aria-valuenow={value}
-      >
-        <span />
-        <span />
-        <span />
-        {value !== undefined && (
-          <i style={{ left: `${(value * 100) / 10}%` }} />
-        )}
-      </div>
-      <div className="stress-labels">
-        <span>Entspannt</span>
-        <span>Moderat</span>
-        <span>Hoch</span>
-      </div>
-      {open && (
-        <Sheet
-          title="Wie gestresst fühlst du dich?"
-          onClose={() => setOpen(false)}
-        >
-          <p className="note">
-            Deine Einschätzung für diesen Tag. Kein automatisch gemessener
-            Stresswert.
-          </p>
-          <label className="stress-input">
-            {draft}/10
-            <input
-              aria-label="Stresslevel"
-              type="range"
-              min="0"
-              max="10"
-              step="1"
-              value={draft}
-              onChange={(e) => setDraft(Number(e.target.value))}
-            />
-          </label>
-          <button
-            className="button"
-            onClick={() => {
-              setData((s) => ({ ...s, stress: { ...s.stress, [day]: draft } }));
-              setOpen(false);
-            }}
-          >
-            Selbstcheck speichern
-          </button>
-          {value !== undefined && (
-            <button
-              className="button secondary"
-              onClick={() => {
-                setData((s) => {
-                  const stress = { ...s.stress };
-                  delete stress[day];
-                  return { ...s, stress };
-                });
-                setOpen(false);
-              }}
-            >
-              Selbstcheck entfernen
-            </button>
-          )}
-        </Sheet>
-      )}
     </section>
   );
 }

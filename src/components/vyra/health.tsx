@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   Activity,
   ArrowUpRight,
@@ -33,6 +33,7 @@ import {
   uid,
 } from "@/lib/vyra-data";
 import { parseHealthXML } from "@/lib/health-import";
+import { nativeHealthAvailable, nativeHealthXML, requestNativeHealth } from "@/lib/native-health";
 import { useVyra } from "./store";
 import {
   BackTitle,
@@ -378,10 +379,29 @@ export function HealthDetail() {
 }
 export function Connections() {
   const { data, setData, toast } = useVyra();
+  const native = useSyncExternalStore(() => () => {}, nativeHealthAvailable, () => false);
   const [parsed, setParsed] = useState<ReturnType<typeof parseHealthXML> | null>(null);
   const [source, setSource] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  useEffect(() => {
+    const receive = (event: Event) => {
+      try {
+        const result = parseHealthXML(nativeHealthXML((event as CustomEvent).detail));
+        setParsed(result);
+        setSource(result.sources[0]);
+        setError("");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Keine freigegebenen Health-Daten verfügbar.");
+      }
+    };
+    window.addEventListener("vyra:native-health", receive);
+    window.vyraNativeHealthReady = true;
+    return () => {
+      window.removeEventListener("vyra:native-health", receive);
+      window.vyraNativeHealthReady = false;
+    };
+  }, []);
   async function importFile(file?: File) {
     if (!file) return;
     setError("");
@@ -459,7 +479,10 @@ export function Connections() {
       samples: [
         ...s.samples.filter(
           (r) =>
-            r.source !== "Beispieldaten" && !keys.has(`${r.date}:${r.metric}`),
+            r.source !== "Beispieldaten" &&
+            (r.metric === "workout"
+              ? !samples.some(next => next.id === r.id) && !(r.id.startsWith("health:workout:") && r.source === source && keys.has(`${r.date}:workout`))
+              : !keys.has(`${r.date}:${r.metric}`)),
         ),
         ...samples,
       ],
@@ -476,14 +499,14 @@ export function Connections() {
         </span>
         <div>
           <h2>Apple Health</h2>
-          <small>Automatische Synchronisierung nicht verbunden</small>
+          <small>{native ? "iPhone · Import nach Freigabe" : "Automatische Synchronisierung nicht verbunden"}</small>
         </div>
       </div>
       <p className="note">
-        Apple Health kann nur über eine native iPhone-App direkt freigegeben
-        werden. In dieser Web-Version kannst du deinen Health-Export lokal
-        importieren.
+        {native ? "Lies freigegebene Werte aus Apple Health. Wähle anschließend eine Quelle und bestätige den lokalen Import. Keine automatische Hintergrund-Synchronisierung."
+          : "Apple Health kann nur über eine native iPhone-App direkt freigegeben werden. Hier kannst du deinen Health-Export lokal importieren."}
       </p>
+      {native && <button className="button" onClick={requestNativeHealth}><Heart size={18} /> Apple Health freigeben</button>}
       <label className="upload-label">
         <Upload size={25} />
         <b>{busy ? "Datei wird geprüft …" : "Health-Export importieren"}</b>

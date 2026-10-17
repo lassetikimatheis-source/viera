@@ -32,6 +32,7 @@ import {
 import { useVyra } from "./store";
 import { DateNav, Meter, SectionTitle } from "./ui";
 import { DashboardRings, StressBar, TrainingEntry } from "./performance";
+import { DashboardLayout } from "./dashboard-layout";
 
 const views = [
   {
@@ -122,13 +123,21 @@ export function Dashboard() {
         </button>
       </div>
       <DateNav />
+      <DashboardLayout>
+      <div id="overview" key="overview">
       <DashboardRings />
       <p className="ring-disclaimer">
         Balance: Zielerfüllung, keine medizinische Bewertung.
       </p>
+      </div>
+      <div id="training" key="training">
       <TrainingEntry />
+      <button className="text-button" onClick={() => go("health")}>Trainingsplan & Fortschritt <ChevronRight size={16} /></button>
+      </div>
+      <div id="stress" key="stress">
       <StressBar />
-      <section className="dash-trend" aria-label="Dein Wochenverlauf">
+      </div>
+      <section id="trend" key="trend" className="dash-trend" aria-label="Dein Wochenverlauf">
         <div className="dash-section-head">
           <h2>Dein Rhythmus</h2>
           <span>7 Tage</span>
@@ -258,8 +267,8 @@ export function Dashboard() {
           </button>
         </div>
       </section>
-      <section className="dash-day">
-        <SectionTitle action="Alle Werte" onClick={() => go("health")}>
+      <section id="day" key="day" className="dash-day">
+        <SectionTitle action="Alle Werte" onClick={() => go("health", "metrics")}>
           Dein Tag
         </SectionTitle>
         <button className="dash-steps" onClick={() => go("health", "steps")}>
@@ -303,7 +312,7 @@ export function Dashboard() {
           <ChevronRight size={17} />
         </button>
       </section>
-      <section className="dash-nutrition">
+      <section id="nutrition" key="nutrition" className="dash-nutrition">
         <div className="dash-section-head">
           <h2>Deine Versorgung</h2>
           <button
@@ -349,13 +358,14 @@ export function Dashboard() {
           </button>
         </div>
       </section>
-      <button className="dash-report" onClick={() => go("wellbeing", "report")}>
+      <button id="report" key="report" className="dash-report" onClick={() => go("wellbeing", "report")}>
         <span>
           <b>Die Woche im Überblick</b>
           <small>Schlaf, Bewegung und Ernährung</small>
         </span>
         <ArrowUpRight size={20} />
       </button>
+      </DashboardLayout>
       <p className="source">
         {data.demo
           ? "Beispieldaten · Keine gesundheitliche Bewertung"
